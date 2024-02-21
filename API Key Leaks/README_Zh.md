@@ -1,8 +1,8 @@
-# API Key Leaks
+# API 密钥泄漏
 
-> The API key is a unique identifier that is used to authenticate requests associated with your project. Some developers might hardcode them or leave it on public shares.
+> API 密钥是唯一标识符，用于对与项目关联的请求进行身份验证。一些开发人员可能会对它们进行硬编码或将其保留在公共共享上。
 
-## Summary
+## 总结
 
 - [Tools](#tools)
 - [Exploit](#exploit)
@@ -22,8 +22,8 @@
 
 ## Tools
 
-- [momenbasel/KeyFinder](https://github.com/momenbasel/KeyFinder) - is a tool that let you find keys while surfing the web
-- [streaak/keyhacks](https://github.com/streaak/keyhacks) - is a repository which shows quick ways in which API keys leaked by a bug bounty program can be checked to see if they're valid
+- [momenbasel/KeyFinder](https://github.com/momenbasel/KeyFinder) - 是一个可以让您在网上冲浪时找到钥匙的工具
+- [streaak/keyhacks](https://github.com/streaak/keyhacks) - 是一个存储库，它显示了可以检查错误赏金计划泄漏的 API 密钥以查看它们是否有效的快速方法
 - [trufflesecurity/truffleHog](https://github.com/trufflesecurity/truffleHog) - Find credentials all over the place
     ```ps1
     ## Scan a Github Organization
