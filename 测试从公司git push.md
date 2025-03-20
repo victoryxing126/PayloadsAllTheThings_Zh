@@ -649,10 +649,6 @@ def MAIN():
     #更新爆破IP基本信息
     QueryIpInfoForBruteIP()
     
-    #本轮脚本执行报错告警
-    if len(Local_Var.warn_list) > 0:
-        FeishuNotifyByMobile("18013827125", PrintBeautiJson(Local_Var.warn_list, False, f"""{str(sys.argv[0]).split(os.sep)[-1]} 脚本执行结束、期间报错：""", False))
-    duration = time.time() - start_time
     
     PrintBeautiJson('', True, f"本轮耗时: {str(int(duration))} 秒 ")
 
