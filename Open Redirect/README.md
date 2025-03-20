@@ -6,10 +6,10 @@
 
 * [Labs](#labs)
 * [Exploitation](#exploitation)
-  * [HTTP Redirection Status Code](#http-redirection-status-code)
-  * [Fuzzing](#fuzzing)
-  * [Filter Bypass](#filter-bypass)
-  * [Common injection parameters](#common-injection-parameters)
+    * [HTTP Redirection Status Code](#http-redirection-status-code)
+    * [Fuzzing](#fuzzing)
+    * [Filter Bypass](#filter-bypass)
+    * [Common injection parameters](#common-injection-parameters)
 * [References](#references)
 
 
@@ -126,7 +126,7 @@ http://www.yoursite.com/http://www.theirsite.com/
 http://www.yoursite.com/folder/www.folder.com
 ```
 
-Using "?" characted, browser will translate it to "/?"
+Using "`?`" character, browser will translate it to "`/?`"
 
 ```powershell
 http://www.yoursite.com?http://www.theirsite.com/
@@ -135,6 +135,7 @@ http://www.yoursite.com?folder/www.folder.com
 
 
 Host/Split Unicode Normalization
+
 ```powershell
 https://evil.c℀.example.com . ---> https://evil.ca/c.example.com
 http://a.com／X.b.com
@@ -192,9 +193,9 @@ http://www.example.com/redirect.php?url=javascript:prompt(1)
 
 ## References
 
-* [Open-Redirect-Payloads - cujanovic](https://github.com/cujanovic/Open-Redirect-Payloads)
-* [Host/Split Exploitable Antipatterns in Unicode Normalization - BlackHat US 2019](https://i.blackhat.com/USA-19/Thursday/us-19-Birch-HostSplit-Exploitable-Antipatterns-In-Unicode-Normalization.pdf)
-* [Open Redirect Vulnerability - AUGUST 15, 2018 - s0cket7](https://s0cket7.com/open-redirect-vulnerability/)
-* [OWASP - Unvalidated Redirects and Forwards Cheat Sheet](https://www.owasp.org/index.php/Unvalidated_Redirects_and_Forwards_Cheat_Sheet)
-* [Pentester Land - Open Redirect Cheat Sheet](https://pentester.land/cheatsheets/2018/11/02/open-redirect-cheatsheet.html)
-* [You do not need to run 80 reconnaissance tools to get access to user accounts - @stefanocoding](https://gist.github.com/stefanocoding/8cdc8acf5253725992432dedb1c9c781)
+- [Host/Split Exploitable Antipatterns in Unicode Normalization - Jonathan Birch - August 3, 2019](https://i.blackhat.com/USA-19/Thursday/us-19-Birch-HostSplit-Exploitable-Antipatterns-In-Unicode-Normalization.pdf)
+- [Open Redirect Cheat Sheet - PentesterLand - November 2, 2018](https://pentester.land/cheatsheets/2018/11/02/open-redirect-cheatsheet.html)
+- [Open Redirect Vulnerability - s0cket7 - August 15, 2018](https://s0cket7.com/open-redirect-vulnerability/)
+- [Open-Redirect-Payloads - Predrag Cujanović - April 24, 2017](https://github.com/cujanovic/Open-Redirect-Payloads)
+- [Unvalidated Redirects and Forwards Cheat Sheet - OWASP - February 28, 2024](https://www.owasp.org/index.php/Unvalidated_Redirects_and_Forwards_Cheat_Sheet)
+- [You do not need to run 80 reconnaissance tools to get access to user accounts - Stefano Vettorazzi (@stefanocoding) - May 16, 2019](https://gist.github.com/stefanocoding/8cdc8acf5253725992432dedb1c9c781)

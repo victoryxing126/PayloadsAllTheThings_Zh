@@ -71,14 +71,23 @@ SELECT usename FROM pg_user
 ```sql
 SELECT usename, passwd FROM pg_shadow 
 ```
+
 ## PostgreSQL List Database Administrator Accounts
+
 ```sql
 SELECT usename FROM pg_user WHERE usesuper IS TRUE
 ```
+
 ## PostgreSQL List Privileges
 
+Gather information from the [`pg_user`](https://www.postgresql.org/docs/current/view-pg-user.html) table:
 ```sql
-SELECT usename, usecreatedb, usesuper, usecatupd FROM pg_user
+SELECT * FROM pg_user
+```
+
+Retrieve all table-level privileges for the current user, excluding tables in system schemas like `pg_catalog` and `information_schema`:
+```sql
+SELECT * FROM information_schema.role_table_grants WHERE grantee = current_user AND table_schema NOT IN ('pg_catalog', 'information_schema');
 ```
 
 ## PostgreSQL Check if Current User is Superuser
@@ -150,6 +159,7 @@ Note, with the above queries, the output needs to be assembled in memory. For la
 ```
 
 ## PostgreSQL Time Based
+
 #### Identify time based
 
 ```sql
@@ -269,12 +279,12 @@ SELECT $TAG$This is another string$TAG$
 ```
 
 
-
 ## References
 
-* [A Penetration Tester’s Guide to PostgreSQL - David Hayter](https://medium.com/@cryptocracker99/a-penetration-testers-guide-to-postgresql-d78954921ee9)
-* [Authenticated Arbitrary Command Execution on PostgreSQL 9.3 > Latest - Mar 20 2019 - GreenWolf](https://medium.com/greenwolf-security/authenticated-arbitrary-command-execution-on-postgresql-9-3-latest-cd18945914d5)
-* [SQL Injection /webApp/oma_conf ctx parameter (viestinta.lahitapiola.fi) - December 8, 2016 - Sergey Bobrov (bobrov)](https://hackerone.com/reports/181803)
-* [POSTGRESQL 9.X REMOTE COMMAND EXECUTION - 26 Oct 17 - Daniel](https://www.dionach.com/blog/postgresql-9-x-remote-command-execution/)
-* [SQL Injection and Postgres - An Adventure to Eventual RCE - May 05, 2020 - Denis Andzakovic](https://pulsesecurity.co.nz/articles/postgres-sqli)
-* [Advanced PostgreSQL SQL Injection and Filter Bypass Techniques - 2009 - INFIGO](https://www.infigo.hr/files/INFIGO-TD-2009-04_PostgreSQL_injection_ENG.pdf)
+- [A Penetration Tester's Guide to PostgreSQL - David Hayter - July 22, 2017](https://medium.com/@cryptocracker99/a-penetration-testers-guide-to-postgresql-d78954921ee9)
+- [Advanced PostgreSQL SQL Injection and Filter Bypass Techniques - Leon Juranic - June 17, 2009](https://www.infigo.hr/files/INFIGO-TD-2009-04_PostgreSQL_injection_ENG.pdf)
+- [Authenticated Arbitrary Command Execution on PostgreSQL 9.3 > Latest - GreenWolf - March 20, 2019](https://medium.com/greenwolf-security/authenticated-arbitrary-command-execution-on-postgresql-9-3-latest-cd18945914d5)
+- [Postgres SQL Injection Cheat Sheet - @pentestmonkey - August 23, 2011](http://pentestmonkey.net/cheat-sheet/sql-injection/postgres-sql-injection-cheat-sheet)
+- [PostgreSQL 9.x Remote Command Execution - dionach - October 26, 2017](https://www.dionach.com/blog/postgresql-9-x-remote-command-execution/)
+- [SQL Injection /webApp/oma_conf ctx parameter - Sergey Bobrov (bobrov) - December 8, 2016](https://hackerone.com/reports/181803)
+- [SQL Injection and Postgres - An Adventure to Eventual RCE - Denis Andzakovic - May 5, 2020](https://pulsesecurity.co.nz/articles/postgres-sqli)

