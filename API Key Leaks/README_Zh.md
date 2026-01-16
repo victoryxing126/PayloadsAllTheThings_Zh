@@ -4,20 +4,20 @@
 
 ## 总结
 
-[ 工具 ] ( #tools )
-[ 利用 ] ( #exploit )
-    [ 谷歌地图 ] ( #google-maps )
-    [ Algolia ] ( #algolia )
-    [ Slack API 令牌 ] ( #slack-api-token )
-    [ Facebook 访问令牌 ] ( #facebook-access-token )
-    [ Github 客户端 ID 和客户端密钥 ] ( #github-client-id-and-client-secret )
-    [ Twilio Account_sid 和认证令牌 ] ( #twilio-account_sid-and-auth-token )
-    [ Twitter API 秘密 ] ( #twitter-api-secret )
-    [ Twitter Bearer 令牌 ] ( #twitter-bearer-token )
-    [ Gitlab 个人访问令牌 ] ( #gitlab-personal-access-token )
-    [ HockeyApp API 令牌 ] ( #hockeyapp-api-token )
-    [ IIS 机器密钥 ] ( #iis-machine-keys )
-    [ Mapbox API 令牌 ] ( #Mapbox-API-Token )
+-[ 工具 ] ( #tools )
+-[ 利用 ] ( #exploit )
+    -[ 谷歌地图 ] ( #google-maps )
+    -[ Algolia ] ( #algolia )
+    -[ Slack API 令牌 ] ( #slack-api-token )
+    -[ Facebook 访问令牌 ] ( #facebook-access-token )
+    -[ Github 客户端 ID 和客户端密钥 ] ( #github-client-id-and-client-secret )
+    -[ Twilio Account_sid 和认证令牌 ] ( #twilio-account_sid-and-auth-token )
+    -[ Twitter API 秘密 ] ( #twitter-api-secret )
+    -[ Twitter Bearer 令牌 ] ( #twitter-bearer-token )
+    -[ Gitlab 个人访问令牌 ] ( #gitlab-personal-access-token )
+    -[ HockeyApp API 令牌 ] ( #hockeyapp-api-token )
+    -[ IIS 机器密钥 ] ( #iis-machine-keys )
+    -[ Mapbox API 令牌 ] ( #Mapbox-API-Token )
 
 
 ## Tools
